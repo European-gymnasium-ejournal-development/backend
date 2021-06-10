@@ -1,8 +1,10 @@
 from flask_restful import Api, Resource, reqparse
+from app.ApiHandlers.verification import parse_token
 
 
 class HelloHandler(Resource):
     def get(self):
+        print(self)
         print('visited')
         return {
             'message': 'Hello world!',
@@ -12,18 +14,21 @@ class HelloHandler(Resource):
     def post(self):
         print(self)
         parser = reqparse.RequestParser()
-        parser.add_argument('type', type=str)
-        parser.add_argument('message', type=str)
+        parser.add_argument('token', type=str)
 
         args = parser.parse_args()
 
         print(args)
 
-        if args['message']:
-            message = 'You just sent: "{}"'.format(args['message'])
-            status = 'OK'
+        if parse_token(args['token']):
+            print('visited')
+            return {
+                'message': 'Hello world!',
+                'answer': 'OK'
+            }
         else:
-            message = 'Something went wrong!'
-            status = 'ERR'
-
-        return {'message': message, 'status': status}
+            print('problem with token')
+            return {
+                'message': 'Error! Problem with token',
+                'answer': 'Error!'
+            }
