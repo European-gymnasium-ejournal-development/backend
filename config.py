@@ -1,8 +1,9 @@
 class Metadata:
-    GOOGLE_CLIENT_ID = '114697129947-ttoghpnvbb2pbp3mht3e11291ems9ska.apps.googleusercontent.com'
-    DATABASE_USER = 'root'
-    DATABASE_PASSWORD = 'root'
+    GOOGLE_CLIENT_ID = 'insert_there_google_app_token.apps.googleusercontent.com'
+    DATABASE_USER = 'username'
+    DATABASE_PASSWORD = 'password'
 
 
 class Config(object):
+    # Здесь будут настройки конкретно Flask App, пока что ничего
     pass
