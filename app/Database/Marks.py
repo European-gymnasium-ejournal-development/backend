@@ -5,7 +5,8 @@ import sys
 
 class Mark(db.Model):
     __tablename__ = 'marks'
-    student_id = Column('student_id', ForeignKey('students.id'), primary_key=True, unique=False)
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
+    student_id = Column('student_id', ForeignKey('students.id'), unique=False)
     criteria = Column('criteria', Integer)
     task_id = Column('task_id', ForeignKey('tasks.id'))
     mark = Column('mark', Integer)
