@@ -20,3 +20,4 @@ db.session.commit()
 print(db.metadata.tables.keys())
 
 print('database initialized')
+
