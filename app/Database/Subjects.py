@@ -62,9 +62,11 @@ def add_subject(id, subject_name, students_ids):
     db.session.commit()
 
 
+# Функция получения предметов, посещаемых учеником
+# Возвращает список словарей
 def get_student_subjects(student_id):
     request_subject_ids = SubjectToStudentMapping.query.with_entities(SubjectToStudentMapping.subject_id).\
         filter_by(student_id=student_id)
 
     request_subjects = Subject.query.filter(Subject.id.in_(request_subject_ids))
-    return [item for item in request_subjects.all()]
+    return [item.to_json() for item in request_subjects.all()]

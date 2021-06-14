@@ -8,7 +8,7 @@ from datetime import datetime
 
 def test_database():
     print('the journey begins)))')
-    add_teacher(0, "test", "test@test.com", 3)
+    add_teacher(1, "test", "test@test.com", 3)
     print(Teacher.query.filter_by().all())
     print('test finished1')
     add_student(1, "qwerty", "10A")
@@ -18,9 +18,9 @@ def test_database():
     print(SubjectToStudentMapping.query.filter_by().all())
     print(Subject.query.filter_by().all())
     print('test finished3')
-    add_task(3, 1, 2, "Good task")
+    add_task(3, 1, 2, "Good task", "2020-09-09T15:10:00+03:00")
     print(Task.query.filter_by().all())
     print('test finished4')
-    add_mark(3, datetime.now(), 1, 2, 7)
+    add_mark(3, 1, 2, 7)
     print(Mark.query.filter_by().all())
     print('test finished')

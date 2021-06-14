@@ -1,6 +1,11 @@
 from app.Database import *
 import sys
 
+# Проверка баз данных
+# Функции в этом файле позволяют посмотреть последние max_size записей в определенной таблице
+# Если не задавать параметр max_size, то будут выведены все записи в таблице
+# inspect_all выводит данные обо всех таблицах
+
 
 def __inspect_table__(table_type, max_size):
     if issubclass(table_type, db.Model):
