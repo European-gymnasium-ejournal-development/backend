@@ -8,4 +8,5 @@ class Metadata:
 
 
 class Config(object):
+    # Здесь будут настройки конкретно Flask App, пока что ничего
     pass
