@@ -6,7 +6,7 @@ from config import Metadata
 class RefreshToken(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('refresh_token', type=str)
+        parser.add_argument('refresh_token', location='cookies', type=str)
 
         args = parser.parse_args()
 
@@ -22,8 +22,10 @@ class RefreshToken(Resource):
 
         if result:
             return {
-                'result': 'OK',
-                'access_token': JWRefreshTokens.generate_token(email, Metadata.JSON_WEB_ACCESS_TOKEN_LIFETIME)
+                'result': 'OK'
+            }, 200, {
+                'Set-Cookie': 'access_token=' +
+                              JWRefreshTokens.generate_token(email, Metadata.JSON_WEB_ACCESS_TOKEN_LIFETIME)
             }
         else:
             return {

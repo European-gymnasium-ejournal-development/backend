@@ -5,7 +5,7 @@ from app.ApiHandlers.JWTVerification import check_access_token
 class HelloHandler(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('access_token', type=str)
+        parser.add_argument('access_token', location='cookies', type=str)
 
         args = parser.parse_args()
         status = check_access_token(args['access_token'])

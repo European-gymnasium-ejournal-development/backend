@@ -2,7 +2,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from config import Metadata
 from app.Database import Teachers
-from app.ApiHandlers import JWTVerification
+from app.Database import JWRefreshTokens
 
 
 def check_email(email):
@@ -20,6 +20,6 @@ def parse_token(token):
 def login(google_token):
     parsed = parse_token(google_token)
     if parsed[0]:
-        return JWTVerification.update_refresh_token(parsed[1])
+        return JWRefreshTokens.update_refresh_token(parsed[1])
     else:
         return '', ''

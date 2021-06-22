@@ -1,5 +1,6 @@
 from app.ApiHandlers import verification
 from flask_restful import Api, Resource, reqparse
+from flask import make_response
 
 
 class Login(Resource):
@@ -19,8 +20,12 @@ class Login(Resource):
                 'error_message': 'Login failed!'
             }
         else:
-            return {
-                'result': 'OK',
-                'refresh_token': result[0],
-                'access_token': result[1]
-            }
+            resp = make_response({'result': 'OK'})
+            resp.set_cookie('access_token', result[1])
+            resp.set_cookie('refresh_token', result[0])
+
+            print(resp.status)
+            print(resp.headers)
+            print(resp.get_data())
+
+            return resp
