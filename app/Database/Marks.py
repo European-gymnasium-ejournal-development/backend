@@ -2,7 +2,23 @@ from datetime import datetime
 
 from app.Database import db, Integer, String, ForeignKey, Column, DateTime, Tasks
 import sys
-# criteria: 0 - A, 1 - B, 2 - C, 3 - D
+# criteria: 1 - A, 2 - B, 3 - C, 4 - D, 0 - No criteria
+
+criteria_ids = {'A': 1, 'B': 2, 'C': 3, 'D': 4, '0': 0}
+
+
+def criteria_to_id(criteria):
+    if criteria in criteria_ids.keys():
+        return criteria_ids[criteria]
+    else:
+        return AttributeError("Criteria argument does not match any of possible criteria")
+
+
+def id_to_criteria(id):
+    for key, value in criteria_ids:
+        if value == id:
+            return value
+        return AttributeError("Id argument does not match any criteria")
 
 
 class Mark(db.Model):
@@ -18,7 +34,7 @@ class Mark(db.Model):
         self.task_id = task_id
 
         if isinstance(criteria, int):
-            if 0 <= criteria <= 3:
+            if 0 <= criteria <= 4:
                 self.criteria = criteria
             else:
                 sys.exit('criteria should be in interval 0 to 3')
@@ -38,14 +54,19 @@ class Mark(db.Model):
             'student_id': self.student_id,
             'task_id': self.task_id,
             'mark': self.mark,
-            'criteria': self.criteria
+            'criteria': id_to_criteria(self.criteria)
         }
 
 
 # Функция, добавляющая оценку за данное задание (task_id),
-# выставленную данному студенту (student_id), по данному критерию (0 - 3) (criteria), с данным значением (mark)
+# выставленную данному студенту (student_id), по данному критерию (A, B, C, D, 0) (criteria), с данным значением (mark)
 # Если оценка с такими параметрами уже существовала, то обновляем данные
 def add_mark(task_id, student_id, criteria, mark):
+    try:
+        criteria = criteria_to_id(criteria)
+    except AttributeError:
+        return criteria
+
     existing_mark = Mark.query.filter_by(student_id=student_id, task_id=task_id, criteria=criteria)
 
     # Если создаем оценку с нуля

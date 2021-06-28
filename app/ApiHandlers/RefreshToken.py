@@ -1,6 +1,7 @@
 from flask_restful import Api, Resource, reqparse
 from app.Database import JWRefreshTokens
 from config import Metadata
+from app.ApiHandlers import JWTVerification
 
 
 class RefreshToken(Resource):
@@ -19,6 +20,14 @@ class RefreshToken(Resource):
         result = JWRefreshTokens.get_token(args['refresh_token'])
 
         email = JWRefreshTokens.parse_email_from_token(args['refresh_token'])
+
+        check_result = JWTVerification.check_access_token(args['refresh_token'])
+
+        if not check_result[0]:
+            return {
+                'result': 'Error!',
+                'error_message': check_result[1]
+            }
 
         if result:
             return {
