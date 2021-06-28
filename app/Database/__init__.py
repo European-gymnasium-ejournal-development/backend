@@ -14,9 +14,11 @@ from app.Database.Marks import Mark
 from app.Database.Tasks import Task
 from app.Database.Subjects import Subject, SubjectToStudentMapping
 from app.Database.Teachers import Teacher
+from app.Database.JWRefreshTokens import JWRefreshToken
 
 db.create_all()
 db.session.commit()
 print(db.metadata.tables.keys())
 
 print('database initialized')
+

@@ -1,3 +1,5 @@
+from sqlalchemy.orm import load_only
+
 from app.Database import db, Column, Integer, String, ForeignKey
 
 
@@ -19,12 +21,19 @@ class Subject(db.Model):
 
 class SubjectToStudentMapping(db.Model):
     __tablename__ = 'subject_to_student'
+    id = Column('id', Integer, primary_key=True, autoincrement=True)
     subject_id = Column('subject_id', ForeignKey('subjects.id'))
-    student_id = Column('student_id', ForeignKey('students.id'), primary_key=True, unique=False)
+    student_id = Column('student_id', ForeignKey('students.id'))
 
     def __init__(self, subject_id, student_id):
-        self.student_id = subject_id
+        self.subject_id = subject_id
         self.student_id = student_id
+
+    def to_json(self):
+        return {
+            'student_id': self.student_id,
+            'subject_id':self.subject_id
+        }
 
 
 # Функция, добавляющая предмет в БД
@@ -51,3 +60,13 @@ def add_subject(id, subject_name, students_ids):
             db.session.add(new_record)
 
     db.session.commit()
+
+
+# Функция получения предметов, посещаемых учеником
+# Возвращает список словарей
+def get_student_subjects(student_id):
+    request_subject_ids = SubjectToStudentMapping.query.with_entities(SubjectToStudentMapping.subject_id).\
+        filter_by(student_id=student_id)
+
+    request_subjects = Subject.query.filter(Subject.id.in_(request_subject_ids))
+    return [item.to_json() for item in request_subjects.all()]

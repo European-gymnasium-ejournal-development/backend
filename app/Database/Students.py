@@ -1,4 +1,5 @@
 from app.Database import db, Column, Integer, String
+from sqlalchemy import literal
 
 
 class Student(db.Model):
@@ -35,3 +36,21 @@ def add_student(id, name, grade):
         existing_user.update(dict(name=name, grade_name=grade))
 
     db.session.commit()
+
+
+# Функция получения всех классов, которые бывают
+# Возвращает список строк
+def get_all_grades():
+    variants = Student.query.with_entities(Student.grade_name).distinct()
+    return [item[0] for item in variants]
+
+
+# Функция получения всех учеников класса, у которых имя содержит данную подстроку
+# Если не указывать подстроку, то фильтр не будет применен
+# Возвращает список словарей
+def get_all_students_of_grade(grade_name, part_of_name=""):
+    request = Student.query.filter_by(grade_name=grade_name).filter(Student.name.contains(part_of_name))
+    return [item.to_json() for item in request]
+
+
+

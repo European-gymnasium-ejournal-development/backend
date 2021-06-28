@@ -7,7 +7,7 @@ class Teacher(db.Model):
     __tablename__ = 'teachers'
     id = Column('id', Integer, primary_key=True, unique=True)
     name = Column('name', String(60))
-    email = Column('email', String(60))
+    email = Column('email', String(60), unique=True)
     access_level = Column('access_level', Integer)
 
     def __init__(self, id, name, email, access_level):
@@ -49,3 +49,12 @@ def add_teacher(id, name, email, access_level):
         existing_teacher.update(dict(name=name, email=email, access_level=access_level))
 
     db.session.commit()
+
+
+# Получение уровня доступа учителя по email-у
+def get_access_level(email):
+    teacher = Teacher.query.filter_by(email=email).first()
+    if teacher is None:
+        return 0
+    else:
+        return teacher.access_level
