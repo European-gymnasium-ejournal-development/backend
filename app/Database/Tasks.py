@@ -1,7 +1,20 @@
 from app.Database import db, Integer, Column, String, ForeignKey, DateTime
 from datetime import datetime
 from datetime import timedelta
+
 # TaskType: 0 - formative, 1 - summative
+TASK_TYPES = {0: 'formative', 1: 'summative'}
+
+
+def tasktype_to_name(tasktype):
+    return TASK_TYPES[tasktype]
+
+
+def name_to_tasktype(name):
+    for key in TASK_TYPES.keys():
+        if TASK_TYPES[key] == name:
+            return key
+    raise AttributeError("No such task name")
 
 
 class Task(db.Model):
@@ -9,7 +22,7 @@ class Task(db.Model):
     id = Column('id', Integer, primary_key=True, unique=True)
     task_type = Column('type', Integer)
     subject_id = Column('subject_id', ForeignKey('subjects.id'))
-    description = Column('description', String(60))
+    description = Column('description', String(16000))
     timestamp = Column('timestamp', DateTime)
 
     def __init__(self, id, task_type, subject_id, description, timestamp):
@@ -22,7 +35,7 @@ class Task(db.Model):
     def to_json(self):
         return {
             'id': self.id,
-            'task_type': self.task_type,
+            'task_type': tasktype_to_name(self.task_type),
             'subject_id': self.subject_id,
             'description': self.description,
             'timestamp': self.timestamp
@@ -46,6 +59,8 @@ def time_to_datetime(time_string):
 # description - описание задания из managebac
 # time - строка со временем дедлайна задания
 def add_task(id, task_type, subject_id, description, time_string):
+    task_type = name_to_tasktype(task_type)
+
     existing_task = Task.query.filter_by(id=id)
     timestamp = time_to_datetime(time_string)
 

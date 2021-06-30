@@ -11,14 +11,14 @@ def criteria_to_id(criteria):
     if criteria in criteria_ids.keys():
         return criteria_ids[criteria]
     else:
-        return AttributeError("Criteria argument does not match any of possible criteria")
+        raise AttributeError("Criteria argument does not match any of possible criteria")
 
 
 def id_to_criteria(id):
     for key, value in criteria_ids:
         if value == id:
             return value
-        return AttributeError("Id argument does not match any criteria")
+        raise AttributeError("Id argument does not match any criteria")
 
 
 class Mark(db.Model):

@@ -1,7 +1,6 @@
-from app import Database
-from app.Database import Inspection
 from app import app
-from tests import test_database
+from ManageBackApi.update_all import update_all
+from ManageBackApi.DB_subjects_STS import update_subjects_tasks_marks
 
-if __name__ == "__main__":
-    app.run(port=5000)
+update_all()
+app.run(port=5000)

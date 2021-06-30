@@ -1,5 +1,5 @@
 from sqlalchemy.orm import load_only
-
+from app.Database.Students import Student
 from app.Database import db, Column, Integer, String, ForeignKey
 
 
@@ -52,10 +52,13 @@ def add_subject(id, subject_name, students_ids):
         # Иначе обновляем значение записи
         existing_subject.update(dict(name=subject_name))
 
+    db.session.commit()
+
     # Теперь обновляем учеников
     for student in students_ids:
         record = SubjectToStudentMapping.query.filter_by(student_id=student, subject_id=id)
-        if record.first() is None:
+        student_record = Student.query.filter_by(id=student)
+        if record.first() is None and student_record.first() is not None:
             new_record = SubjectToStudentMapping(id, student)
             db.session.add(new_record)
 
