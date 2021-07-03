@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from app.Database import db, Integer, String, ForeignKey, Column, DateTime, Tasks
-import sys
+from app.Database import db, Integer, String, ForeignKey, Column, DateTime, Tasks, Students
+from config import error
 # criteria: 1 - A, 2 - B, 3 - C, 4 - D, 0 - No criteria
 
 criteria_ids = {'A': 1, 'B': 2, 'C': 3, 'D': 4, '0': 0}
@@ -18,7 +18,7 @@ def id_to_criteria(id):
     for key, value in criteria_ids:
         if value == id:
             return value
-        raise AttributeError("Id argument does not match any criteria")
+        error("Id argument does not match any criteria")
 
 
 class Mark(db.Model):
@@ -27,55 +27,57 @@ class Mark(db.Model):
     student_id = Column('student_id', ForeignKey('students.id'), unique=False)
     criteria = Column('criteria', Integer)
     task_id = Column('task_id', ForeignKey('tasks.id'))
-    mark = Column('mark', Integer)
+    mark = Column('mark', String(16))
+    max_mark = Column('max_mark', String(16))
 
-    def __init__(self, student_id, criteria, task_id, mark):
+    def __init__(self, student_id, criteria, task_id, mark, max_mark):
         self.student_id = student_id
         self.task_id = task_id
+        self.max_mark = str(max_mark)
+        self.mark = str(mark)
 
         if isinstance(criteria, int):
             if 0 <= criteria <= 4:
                 self.criteria = criteria
             else:
-                sys.exit('criteria should be in interval 0 to 3')
+                error('criteria should be in interval 0 to 3')
         else:
-            sys.exit('criteria should be an integer')
-
-        if isinstance(mark, int):
-            if 1 <= mark <= 8:
-                self.mark = mark
-            else:
-                sys.exit('mark should be in interval 1 to 8')
-        else:
-            sys.exit('mark should be an integer')
+            error('criteria should be an integer')
 
     def to_json(self):
         return {
             'student_id': self.student_id,
             'task_id': self.task_id,
             'mark': self.mark,
-            'criteria': id_to_criteria(self.criteria)
+            'criteria': id_to_criteria(self.criteria),
+            'max_mark': self.max_mark
         }
 
 
 # Функция, добавляющая оценку за данное задание (task_id),
 # выставленную данному студенту (student_id), по данному критерию (A, B, C, D, 0) (criteria), с данным значением (mark)
 # Если оценка с такими параметрами уже существовала, то обновляем данные
-def add_mark(task_id, student_id, criteria, mark):
+def add_mark(task_id, student_id, criteria, mark, max_mark):
     try:
         criteria = criteria_to_id(criteria)
     except AttributeError:
-        return criteria
+        return
+
+    student_record = Students.Student.query.filter_by(id=student_id)
+    task_record = Tasks.Task.query.filter_by(id=task_id)
+
+    if student_record.first() is None or task_record.first() is None:
+        return
 
     existing_mark = Mark.query.filter_by(student_id=student_id, task_id=task_id, criteria=criteria)
 
     # Если создаем оценку с нуля
     if existing_mark.first() is None:
-        new_mark = Mark(student_id, criteria, task_id, mark)
+        new_mark = Mark(student_id, criteria, task_id, mark, max_mark)
         db.session.add(new_mark)
     else:
         # Иначе обновляем значение оценки
-        existing_mark.update(dict(mark=mark))
+        existing_mark.update(dict(mark=str(mark), max_mark=str(max_mark)))
 
     db.session.commit()
 
@@ -90,20 +92,35 @@ def get_marks(time_from, time_to, student_id, subject_id):
     timestamp_begin = user_input_time_to_datetime(time_from)
     timestamp_end = user_input_time_to_datetime(time_to)
 
-    request_tasks = Tasks.Task.query.filter(Tasks.Task.timestamp >= timestamp_begin)\
-                                    .filter(Tasks.Task.timestamp <= timestamp_end)\
-                                    .filter_by(subject_id=subject_id)\
-                                    .with_entities(Tasks.Task.id)
+    # Запрос такой
+    # select * from marks m inner join tasks t on m.task_id = t.id where (m.student_id=student_id
+    # and t.timestamp >= timestamp_begin and t.timestamp <= timestamp_end and subject_id=subject_id)
 
-    request_marks = Mark.query.filter_by(student_id=student_id).filter(Mark.task_id.in_(request_tasks))
-    mark_list = [item.to_json() for item in request_marks.all()]
+    # request_tasks = Tasks.Task.query.filter(Tasks.Task.timestamp >= timestamp_begin)\
+    #                                .filter(Tasks.Task.timestamp <= timestamp_end)\
+    #                                .filter_by(subject_id=subject_id)\
+    #                                .with_entities(Tasks.Task.id)
 
-    for index, mark in enumerate(mark_list):
-        task = Tasks.Task.query.filter_by(id=mark['task_id']).first()
-        mark['type'] = task.task_type
-        mark['timestamp'] = task.timestamp
-        mark['description'] = task.description
+    request_marks = Mark.query.join(Tasks.Task, Mark.task_id == Tasks.Task.id)\
+        .filter(Mark.student_id == student_id).filter(Tasks.Task.timestamp <= timestamp_end)\
+        .filter(Tasks.Task.timestamp >= timestamp_begin).filter(Tasks.Task.subject_id == subject_id)
 
-        mark_list[index] = mark
+    # request_marks = Mark.query.filter_by(student_id=student_id).filter(Mark.task_id.in_(request_tasks))
+
+    mark_list = []
+
+    for mark, task in request_marks.all():
+        mark_js = mark.to_json()
+        task_js = task.to_json()
+
+        full_obj = {key: value for (key, value) in (mark_js.items() + task_js.items())}
+
+        mark_list.append(full_obj)
+        # task = Tasks.Task.query.filter_by(id=mark['task_id']).first()
+        # mark['type'] = task.task_type
+        # mark['timestamp'] = task.timestamp
+        # mark['description'] = task.description
+
+        # mark_list[index] = mark
 
     return mark_list

@@ -38,7 +38,7 @@ class Task(db.Model):
             'task_type': tasktype_to_name(self.task_type),
             'subject_id': self.subject_id,
             'description': self.description,
-            'timestamp': self.timestamp
+            'timestamp': self.timestamp.strftime("%Y-%m-%d")
         }
 
 

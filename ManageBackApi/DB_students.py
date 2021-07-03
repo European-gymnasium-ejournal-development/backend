@@ -47,7 +47,8 @@ def update_students():
         if grades['meta']['current_page'] == grades['meta']['total_pages']:
             break
     print('finished loading data')
-    total_students = translate_names(total_students)
+    # Перевод не понадобился
+    # total_students = translate_names(total_students)
     for student in total_students:
         add_student(student['id'], student['name'], student['grade'])
 

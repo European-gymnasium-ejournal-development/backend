@@ -6,7 +6,7 @@ from app.Database import db, Column, Integer, String, ForeignKey
 class Subject(db.Model):
     __tablename__ = 'subjects'
     id = Column('id', Integer, primary_key=True, unique=True)
-    name = Column('name', String(60), unique=True)
+    name = Column('name', String(512), unique=False)
 
     def __init__(self, id, name):
         self.id = id

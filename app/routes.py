@@ -1,7 +1,6 @@
 from app import app, api
-from flask import url_for, request, flash, redirect, send_from_directory
-from flask_restful import Api, Resource, reqparse
-from app.ApiHandlers import HelloHandler, Login, RefreshToken
+from flask import send_from_directory
+from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects
 
 
 @app.route('/')
@@ -27,3 +26,8 @@ def export():
 api.add_resource(HelloHandler.HelloHandler, '/api/hello')
 api.add_resource(Login.Login, '/api/login')
 api.add_resource(RefreshToken.RefreshToken, '/api/refresh_token')
+api.add_resource(Grades.GradesApi, '/api/grades')
+api.add_resource(Marks.MarksApi, '/api/marks')
+api.add_resource(Students.StudentsApi, '/api/students')
+api.add_resource(Subjects.SubjectsApi, '/api/subjects')
+api.add_resource(Logs.LogsApi, '/api/logs')

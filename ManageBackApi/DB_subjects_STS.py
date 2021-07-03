@@ -6,6 +6,10 @@ import json
 from config import Metadata
 
 
+def check_mark(mark, max_mark):
+    return mark is not None and max_mark is not None
+
+
 def update_subjects_tasks_marks():
     print('started updating subjects, marks and tasks')
     page = 1
@@ -16,7 +20,8 @@ def update_subjects_tasks_marks():
         y = requests.get(url, headers=headers, params=payload)
         subject = json.loads(y.text)
         page += 1
-        for item1 in subject['classes']:
+        for index, item1 in enumerate(subject['classes']):
+            print(str(index + 1) + " of " + str(len(subject['classes'])))
             subject_id = item1['id']
             subject_name = item1['name']
             url2 = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/students'
@@ -34,6 +39,7 @@ def update_subjects_tasks_marks():
             y3 = requests.get(url3, headers=headers3, params=payload)
             tasks = json.loads(y3.text)
             for item3 in tasks['tasks']:
+                print(item3)
                 task_id = item3['id']
                 task_date = item3['due_date']
                 task_type = item3['task_type']
@@ -56,15 +62,24 @@ def update_subjects_tasks_marks():
                         for item5 in item4['assessments']['criteria']:
                             criteria = item5['label']
                             mark = item5['score']
+                            max_mark = 8
+                            if check_mark(mark, max_mark):
+                                add_mark(task_id=task_id,
+                                         student_id=student_id,
+                                         criteria=criteria,
+                                         mark=mark,
+                                         max_mark=max_mark)
 
-                            add_mark(task_id=task_id,
-                                     student_id=student_id,
-                                     criteria=criteria,
-                                     mark=mark)
                     elif any(x == 'points' for x in item4['assessments']):
                         criteria = '0'
                         mark = item4['assessments']['points']['score']
-                        add_mark(task_id=task_id, student_id=student_id, criteria=criteria, mark=mark)
+                        max_mark = item4['assessments']['points']['max_score']
+                        if check_mark(mark, max_mark):
+                            add_mark(task_id=task_id,
+                                     student_id=student_id,
+                                     criteria=criteria,
+                                     mark=mark,
+                                     max_mark=max_mark)
 
         if subject['meta']['current_page'] == subject['meta']['total_pages']:
             break
