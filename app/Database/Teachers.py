@@ -1,6 +1,13 @@
 from app.Database import db, Column, Integer, String
 import sys
-# Access level: 0 - no access, 1 - casual access, 2 - admin, 3 - god
+from enum import Enum
+
+
+class AccessLevel(Enum):
+    NO_ACCESS = 0
+    CASUAL_ACCESS = 1
+    ADMIN = 2
+    GOD = 3
 
 
 class Teacher(db.Model):
@@ -55,6 +62,6 @@ def add_teacher(id, name, email, access_level):
 def get_access_level(email):
     teacher = Teacher.query.filter_by(email=email).first()
     if teacher is None:
-        return 0
+        return AccessLevel.NO_ACCESS
     else:
         return teacher.access_level

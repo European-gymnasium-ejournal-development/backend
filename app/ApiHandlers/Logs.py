@@ -5,7 +5,7 @@ import datetime
 
 
 class LogsApi(Resource):
-    def post(self):
+    def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('access_token', location='cookies', type=str)
         parser.add_argument('action', type=str)
@@ -18,6 +18,8 @@ class LogsApi(Resource):
             email = JWRefreshTokens.parse_email_from_token(args['access_token'])
             action = args['action']
             time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+
+            
 
             # TODO: добавить логирование в какой-то файл
 

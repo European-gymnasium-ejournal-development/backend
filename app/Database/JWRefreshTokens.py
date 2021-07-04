@@ -24,7 +24,7 @@ class JWRefreshToken(db.Model):
 def generate_token(email, lifetime):
     teacher_rights = Teachers.get_access_level(email)
 
-    if teacher_rights == 0:
+    if teacher_rights == Teachers.AccessLevel.NO_ACCESS:
         return ""
 
     header = {"alg": "HS256", "typ": "JWT"}

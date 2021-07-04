@@ -15,10 +15,11 @@ def criteria_to_id(criteria):
 
 
 def id_to_criteria(id):
-    for key, value in criteria_ids:
+    for key in criteria_ids.keys():
+        value = criteria_ids[key]
         if value == id:
-            return value
-        error("Id argument does not match any criteria")
+            return key
+    error("Id argument does not match any criteria")
 
 
 class Mark(db.Model):
@@ -96,30 +97,32 @@ def get_marks(time_from, time_to, student_id, subject_id):
     # select * from marks m inner join tasks t on m.task_id = t.id where (m.student_id=student_id
     # and t.timestamp >= timestamp_begin and t.timestamp <= timestamp_end and subject_id=subject_id)
 
-    # request_tasks = Tasks.Task.query.filter(Tasks.Task.timestamp >= timestamp_begin)\
-    #                                .filter(Tasks.Task.timestamp <= timestamp_end)\
-    #                                .filter_by(subject_id=subject_id)\
-    #                                .with_entities(Tasks.Task.id)
+    request_tasks = Tasks.Task.query.filter(Tasks.Task.timestamp >= timestamp_begin)\
+                                    .filter(Tasks.Task.timestamp <= timestamp_end)\
+                                    .filter_by(subject_id=subject_id)\
+                                    .with_entities(Tasks.Task.id)
 
-    request_marks = Mark.query.join(Tasks.Task, Mark.task_id == Tasks.Task.id)\
-        .filter(Mark.student_id == student_id).filter(Tasks.Task.timestamp <= timestamp_end)\
-        .filter(Tasks.Task.timestamp >= timestamp_begin).filter(Tasks.Task.subject_id == subject_id)
+    # request_marks = Mark.query.join(Tasks.Task, Mark.task_id == Tasks.Task.id)\
+    #    .filter(Mark.student_id == student_id).filter(Tasks.Task.timestamp <= timestamp_end)\
+    #    .filter(Tasks.Task.timestamp >= timestamp_begin).filter(Tasks.Task.subject_id == subject_id)
 
-    # request_marks = Mark.query.filter_by(student_id=student_id).filter(Mark.task_id.in_(request_tasks))
+    request_marks = Mark.query.filter_by(student_id=student_id).filter(Mark.task_id.in_(request_tasks))
 
     mark_list = []
 
-    for mark, task in request_marks.all():
+    for mark in request_marks.all():
         mark_js = mark.to_json()
-        task_js = task.to_json()
+        # task_js = task.to_json()
 
-        full_obj = {key: value for (key, value) in (mark_js.items() + task_js.items())}
+        # full_obj = {key: value for (key, value) in (mark_js.items() + task_js.items())}
 
-        mark_list.append(full_obj)
-        # task = Tasks.Task.query.filter_by(id=mark['task_id']).first()
-        # mark['type'] = task.task_type
-        # mark['timestamp'] = task.timestamp
-        # mark['description'] = task.description
+        # mark_list.append(full_obj)
+        task = Tasks.Task.query.filter_by(id=mark_js['task_id']).first()
+        mark_js['type'] = Tasks.tasktype_to_name(task.task_type)
+        mark_js['timestamp'] = task.timestamp.strftime("%Y-%m-%d")
+        mark_js['description'] = task.description
+
+        mark_list.append(mark_js)
 
         # mark_list[index] = mark
 
