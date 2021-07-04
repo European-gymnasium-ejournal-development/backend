@@ -11,6 +11,8 @@ class Metadata:
     JSON_WEB_ACCESS_TOKEN_LIFETIME = 30
     SECRET_KEY = 'qwertyasdfghfdjhalifgf'
     DEBUG_MODE = True
+    UPDATE_DATABASE_PERIOD = 24 * 3600
+    MINIMUM_UPDATE_PERIOD = 2 * 3600
 
 
 def error(message):

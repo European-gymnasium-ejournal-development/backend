@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 
 
-class AccessLevel(Enum):
+class AccessLevel:
     NO_ACCESS = 0
     CASUAL_ACCESS = 1
     ADMIN = 2
@@ -40,6 +40,12 @@ class Teacher(db.Model):
         }
 
 
+def update_teachers_rights(email, access_level):
+    existing_teacher = Teacher.query.filter_by(email=email)
+    if existing_teacher.first() is not None:
+        existing_teacher.update(dict(access_level=access_level))
+
+
 # Функция, добавляющая учителя в список авторитетных лиц
 # id - managebac id учителя
 # name - имя, email - адрес
@@ -65,3 +71,8 @@ def get_access_level(email):
         return AccessLevel.NO_ACCESS
     else:
         return teacher.access_level
+
+
+def get_all_teachers():
+    all_teachers = Teacher.query.all()
+    return [item.to_json() for item in all_teachers]
