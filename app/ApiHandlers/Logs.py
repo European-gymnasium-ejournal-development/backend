@@ -17,7 +17,7 @@ class LogsApi(Resource):
             ip = reqparse.request.remote_addr
             email = JWRefreshTokens.parse_email_from_token(args['access_token'])
             action = args['action']
-            time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+            time = datetime.datetime.now().strftime("%H:%M:%S")
 
             
 
