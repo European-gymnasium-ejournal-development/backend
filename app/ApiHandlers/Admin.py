@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Teachers, JWRefreshTokens
 from config import Metadata
+from ManageBackApi import update_all
 
 
 def standart_processing(parser):
@@ -129,7 +130,7 @@ class ResetUpdateTimeApi(Resource):
 
         if new_update_time >= Metadata.MINIMUM_UPDATE_PERIOD:
             Metadata.UPDATE_DATABASE_PERIOD = new_update_time
-            # TODO: Изменить периодичность обновлений БД и перезапустить процесс обновления
+            update_all.restart()
 
             return {
                 'result': 'OK'

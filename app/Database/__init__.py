@@ -5,8 +5,10 @@ from config import Metadata
 from app import app
 from flask_sqlalchemy import SQLAlchemy
 
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://{}:{}@localhost/ManageBac'.format(Metadata.DATABASE_USER,
                                                                                    Metadata.DATABASE_PASSWORD)
+
 db = SQLAlchemy(app)
 
 from app.Database.Students import Student

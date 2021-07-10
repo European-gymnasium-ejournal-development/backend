@@ -1,7 +1,8 @@
 from app import app
-from ManageBackApi.update_all import update_all
-from ManageBackApi.DB_subjects_STS import update_subjects_tasks_marks
-
+from ManageBackApi import update_all
 
 if __name__ == '__main__':
+    update_all.restart()
     app.run(port=5000)
+
+
