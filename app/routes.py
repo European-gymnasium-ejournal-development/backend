@@ -1,6 +1,6 @@
 from app import app, api
 from flask import send_from_directory
-from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin
+from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers
 
 
 @app.route('/')
@@ -18,8 +18,8 @@ def admin():
     return serve_index()
 
 
-@app.route('/export')
-def export():
+@app.route('/export/<type>/<id>/<date>')
+def export(type, id, date):
     return serve_index()
 
 
@@ -36,3 +36,5 @@ api.add_resource(Admin.ResetUpdateTimeApi, '/api/reset_update_time')
 api.add_resource(Admin.ReadLogsApi, '/api/read_logs')
 api.add_resource(Admin.SetTeacherRightsApi, '/api/reset_rights')
 api.add_resource(Admin.GetTeachersApi, '/api/get_teachers')
+api.add_resource(Teachers.TeachersApi, '/api/teacher')
+api.add_resource(Login.Logout, '/api/logout')

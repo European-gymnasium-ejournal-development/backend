@@ -3,6 +3,15 @@ from flask_restful import Api, Resource, reqparse
 from flask import make_response
 
 
+class Logout(Resource):
+    def get(self):
+        resp = make_response({'result': 'OK'})
+        resp.set_cookie('access_token', "")
+        resp.set_cookie('refresh_token', "")
+
+        return resp
+
+
 class Login(Resource):
     def get(self):
         parser = reqparse.RequestParser()

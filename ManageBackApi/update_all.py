@@ -14,6 +14,7 @@ def update_all(update_period):
         update_teachers()
         update_subjects_tasks_marks()
         print('everything is up to date')
+        print('next update is in {} hours'.format(update_period // 3600))
         time.sleep(update_period)
 
 
@@ -24,6 +25,7 @@ def restart():
     global update_process
     if update_process is not None:
         update_process.terminate()
+        update_process.join()
         update_process.close()
     update_process = multiprocessing.Process(name="update", target=update_all, args={Metadata.UPDATE_DATABASE_PERIOD})
     update_process.start()

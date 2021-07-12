@@ -76,3 +76,11 @@ def get_access_level(email):
 def get_all_teachers():
     all_teachers = Teacher.query.all()
     return [item.to_json() for item in all_teachers]
+
+
+def get_teacher(email):
+    teacher = Teacher.query.filter_by(email=email).first()
+    if teacher is None:
+        return ""
+    else:
+        return teacher.name
