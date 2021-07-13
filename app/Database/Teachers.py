@@ -44,6 +44,7 @@ def update_teachers_rights(email, access_level):
     existing_teacher = Teacher.query.filter_by(email=email)
     if existing_teacher.first() is not None:
         existing_teacher.update(dict(access_level=access_level))
+        db.session.commit()
 
 
 # Функция, добавляющая учителя в список авторитетных лиц

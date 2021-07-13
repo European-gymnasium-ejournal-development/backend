@@ -22,8 +22,14 @@ def update_subjects_tasks_marks():
         page += 1
         for index, item1 in enumerate(subject['classes']):
             print(str(index + 1) + " of " + str(len(subject['classes'])))
+            print(item1)
             subject_id = item1['id']
             subject_name = item1['name']
+            subject_teachers = []
+            for teacher in item1['teachers']:
+                if teacher['show_on_reports']:
+                    subject_teachers.append(teacher['teacher_id'])
+
             url2 = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/students'
             headers2 = {'auth-token': Metadata.MANAGEBAC_API_KEY}
             y2 = requests.get(url2, headers=headers2, params=payload)
@@ -32,7 +38,7 @@ def update_subjects_tasks_marks():
             print(subject_id, subject_name)
             print(student)
 
-            add_subject(subject_id, subject_name, student['student_ids'])
+            add_subject(subject_id, subject_name, student['student_ids'], subject_teachers)
 
             url3 = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/tasks'
             headers3 = {'auth-token': Metadata.MANAGEBAC_API_KEY}

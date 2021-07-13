@@ -1,5 +1,9 @@
+import datetime
+import os
+from flask_restful import reqparse
+from  app.ApiHandlers import JWTVerification
 from app import app, api
-from flask import send_from_directory
+from flask import send_from_directory, redirect
 from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers
 
 
@@ -21,6 +25,43 @@ def admin():
 @app.route('/export/<type>/<id>/<date>')
 def export(type, id, date):
     return serve_index()
+
+
+@app.route('/download_logs/<date_from>/<date_to>/<key>')
+def download_logs(date_from, date_to, key):
+    status = JWTVerification.check_access_token(key)
+    if not status[0]:
+        return redirect('/admin')
+
+    try:
+        date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d")
+        date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d")
+    except Exception:
+        return redirect('/admin')
+
+    if date_from > date_to:
+        return redirect('/admin')
+
+    print('parsed data... preparing logs...\n\n\n\n')
+    path = os.path.join(os.path.join('logs', 'tmp'), 'prepared.log')
+    result_file = open(path, 'w')
+
+    current_date = date_from
+    print(date_to)
+    while current_date <= date_to:
+        print(current_date)
+        filename = os.path.join('logs', current_date.strftime("%Y-%m-%d") + ".log")
+        if os.path.exists(filename):
+            source = open(filename, 'r')
+            data = source.readlines()
+            result_file.write(current_date.strftime("%Y-%m-%d") + '\n')
+            result_file.write('\n'.join(data))
+        current_date += datetime.timedelta(days=1)
+
+    result_file.close()
+    print(os.path.join('..\\logs', 'tmp'))
+    abspath = os.path.abspath(os.path.join('.\\logs', 'tmp'))
+    return send_from_directory(abspath, 'prepared.log', as_attachment=True)
 
 
 api.add_resource(HelloHandler.HelloHandler, '/api/hello')

@@ -3,6 +3,10 @@ from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Teachers, JWRefreshTokens
 from config import Metadata
 from ManageBackApi import update_all
+import os
+import sys
+from flask import send_file, redirect
+import datetime
 
 
 def standart_processing(parser):
@@ -72,7 +76,7 @@ class SetTeacherRightsApi(Resource):
 
         args = parser.parse_args()
 
-        if not args['email'] or not args['access_level']:
+        if not args['email'] or (not args['access_level'] and args['access_level'] != 0):
             return {
                 'result': 'Error!',
                 'error_message': 'no required argument given!'
@@ -95,25 +99,16 @@ class ReadLogsApi(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         std_p = standart_processing(parser)
-
         if std_p is not None:
             return std_p
 
-        parser.add_argument('date_from', type=str)
-        parser.add_argument('date_to', type=str)
-
         args = parser.parse_args()
-
-        if not args['date_from'] or not args['date_to']:
-            return {
-                'result': 'Error!',
-                'error_message': 'no required argument given!'
-            }
-
-        date_from = args['date_from']
-        date_to = args['date_to']
-
-        # TODO: собрать логи за нужный период и отправить их клиенту
+        email = JWRefreshTokens.parse_email_from_token(args['access_token'])
+        key = JWRefreshTokens.generate_token(email, 10)
+        return {
+            'result': 'OK',
+            'key': key
+        }
 
 
 class ResetUpdateTimeApi(Resource):
@@ -129,6 +124,7 @@ class ResetUpdateTimeApi(Resource):
         new_update_time = args['new_update_time']
 
         if new_update_time >= Metadata.MINIMUM_UPDATE_PERIOD:
+            print('restarting\n\n\n\n')
             Metadata.UPDATE_DATABASE_PERIOD = new_update_time
             update_all.restart()
 

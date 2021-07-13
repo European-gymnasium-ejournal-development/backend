@@ -6,8 +6,8 @@ from flask import make_response
 class Logout(Resource):
     def get(self):
         resp = make_response({'result': 'OK'})
-        resp.set_cookie('access_token', "")
-        resp.set_cookie('refresh_token', "")
+        resp.set_cookie('access_token', "q")
+        resp.set_cookie('refresh_token', "q")
 
         return resp
 

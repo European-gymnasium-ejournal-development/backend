@@ -24,6 +24,9 @@ def check_access_token(token):
     payload = eval(payload)
 
     now = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).total_seconds()
+
+    print(payload['exp'] - now)
+    print(token)
     if payload['exp'] < now:
         return False, 'expired'
 

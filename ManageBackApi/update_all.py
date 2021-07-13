@@ -4,11 +4,13 @@ from ManageBackApi.DB_students import update_students
 from config import Metadata
 import time
 import multiprocessing
+import threading
 
 
 def update_all(update_period):
+    import app.Database
     while True:
-        print(time)
+        print(update_period)
         print('started updating all')
         update_students()
         update_teachers()

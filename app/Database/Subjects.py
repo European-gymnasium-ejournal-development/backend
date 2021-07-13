@@ -1,5 +1,6 @@
 from sqlalchemy.orm import load_only
 from app.Database.Students import Student
+from app.Database.Teachers import Teacher
 from app.Database import db, Column, Integer, String, ForeignKey
 
 
@@ -36,12 +37,29 @@ class SubjectToStudentMapping(db.Model):
         }
 
 
+class SubjectsToTeachersMapping(db.Model):
+    __tablename__ = "subjects_to_teachers"
+    id = Column('id', Integer, autoincrement=True, primary_key=True, unique=True)
+    subject_id = Column('subject_id', ForeignKey("subjects.id"))
+    teacher_id = Column('teacher_id',  ForeignKey("teachers.id"))
+
+    def __init__(self, subject_id, teacher_id):
+        self.subject_id = subject_id
+        self.teacher_id = teacher_id
+
+    def to_json(self):
+        return {
+            "subject_id": self.subject_id,
+            "teacher_id": self.teacher_id
+        }
+
+
 # Функция, добавляющая предмет в БД
 # Если такой предмет уже существовал, то данные будут обновлены
 # id - id предмета в ManageBac
 # subject_name - название предмета
 # students_ids - список id студентов, посещающих курс
-def add_subject(id, subject_name, students_ids):
+def add_subject(id, subject_name, students_ids, teachers):
     existing_subject = Subject.query.filter_by(id=id)
 
     # Если создаем предмет с нуля
@@ -62,6 +80,15 @@ def add_subject(id, subject_name, students_ids):
             new_record = SubjectToStudentMapping(id, student)
             db.session.add(new_record)
 
+    # Теперь добавляем учителей в предмет
+    for teacher in teachers:
+        record = SubjectsToTeachersMapping.query.filter_by(teacher_id=teacher, subject_id=id)
+        teacher_record = Teacher.query.filter_by(id=teacher)
+
+        if record.first() is None and teacher_record.first() is not None:
+            new_record = SubjectsToTeachersMapping(id, teacher)
+            db.session.add(new_record)
+
     db.session.commit()
 
 
@@ -73,3 +100,19 @@ def get_student_subjects(student_id):
 
     request_subjects = Subject.query.filter(Subject.id.in_(request_subject_ids))
     return [item.to_json() for item in request_subjects.all()]
+
+
+def get_subjects_teachers(subject_id):
+    request = SubjectsToTeachersMapping.query.filter_by(subject_id=subject_id)\
+        .with_entities(SubjectsToTeachersMapping.teacher_id)
+
+    teachers_request = Teacher.query.filter(Teacher.id.in_(request))
+    return [item.to_json() for item in teachers_request.all()]
+
+
+def get_subject(subject_id):
+    request = Subject.query.filter_by(id=subject_id).first()
+    if request is not None:
+        return request.to_json()
+    else:
+        return None
