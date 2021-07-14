@@ -1,30 +1,55 @@
 import datetime
 import json
+import os
+
 from flask_restful import Resource, reqparse
 from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Students, Teachers, Subjects, Tasks, Marks, JWRefreshTokens
 from config import Metadata
 from hashlib import sha256
 import base64
+from fpdf import FPDF
 
 
 def gen_key(filename):
     filename_code = base64.b64encode(filename)
-    sumstring = filename + Metadata.SECRET_KEY
+
+
+    expiration = datetime.datetime.now() + datetime.timedelta(seconds=10)
+    epoch = datetime.datetime(1970, 1, 1)
+    timestamp = (expiration - epoch) // datetime.timedelta(microseconds=1)
+    expiration_code = base64.b64decode(str(timestamp))
+
+    sumstring = filename + expiration_code + Metadata.SECRET_KEY
+
     hash = sha256(sumstring)
-    key = filename_code + "." + hash
+    key = filename_code + "." + expiration_code + "." + hash
     return key
 
 
 def check_key(key):
-    filename_code, hash = key.split('.')
+    filename_code, timestamp_code, hash = key.split('.')
     filename = base64.b64decode(filename_code)
-    sumstring = filename + Metadata.SECRET_KEY
+    timestamp = base64.b64decode(timestamp_code)
+
+    sumstring = filename + timestamp + Metadata.SECRET_KEY
+
+    epoch = datetime.datetime(1970, 1, 1)
+
+    try:
+        timestamp = int(timestamp)
+    except:
+        return False
+
+    if datetime.datetime.now() > (epoch + datetime.timedelta(microseconds=timestamp)):
+        return False
+
     hash_check = sha256(sumstring)
     if hash_check == hash:
         return filename
     else:
         return False
+
 
 class ReportApi(Resource):
     def get(self):
@@ -80,6 +105,15 @@ class ReportApi(Resource):
 
             show_only_summative = args['only_summative']
 
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            pdf.cell(w=200, h=10, txt="Отчет о работе", ln=1, align="C")
+
+            prepared_text = "Подготовил(а): " + creator['name'] + " (" + creator['email'] + ")"
+
+            pdf.cell(w=200, h=10, txt=prepared_text, ln=1, align="C")
+
             # TODO: создать и сформировать файл с отчетом
             # TODO: тут пока просто записать заголовок. Оценки и таблицы будут дальше
 
@@ -103,6 +137,8 @@ class ReportApi(Resource):
                     continue
 
                 # TODO: заполнить таблицу с текущим предметом
+
+            pdf.output(os.path.join("reports", filename))
 
             return {
                 'result': 'OK',

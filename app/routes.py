@@ -4,7 +4,7 @@ from flask_restful import reqparse
 from  app.ApiHandlers import JWTVerification
 from app import app, api
 from flask import send_from_directory, redirect
-from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers
+from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers, Report
 
 
 @app.route('/')
@@ -25,6 +25,15 @@ def admin():
 @app.route('/export/<type>/<id>/<date>')
 def export(type, id, date):
     return serve_index()
+
+
+@app.route('/download_report/<key>')
+def download_report(key):
+    filename = Report.check_key(key)
+    if filename:
+        return send_from_directory("reports", filename, as_attachment=True)
+    else:
+        return redirect('/main')
 
 
 @app.route('/download_logs/<date_from>/<date_to>/<key>')
@@ -79,3 +88,5 @@ api.add_resource(Admin.SetTeacherRightsApi, '/api/reset_rights')
 api.add_resource(Admin.GetTeachersApi, '/api/get_teachers')
 api.add_resource(Teachers.TeachersApi, '/api/teacher')
 api.add_resource(Login.Logout, '/api/logout')
+api.add_resource(Report.ReportApi, '/api/report')
+api.add_resource(Students.GetStudentApi, '/api/get_student')
