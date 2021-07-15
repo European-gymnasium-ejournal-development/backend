@@ -107,7 +107,7 @@ class ReadLogsApi(Resource):
         key = JWRefreshTokens.generate_token(email, 10)
         return {
             'result': 'OK',
-            'key': key
+            'key': str(key.encode('utf-8').hex())
         }
 
 

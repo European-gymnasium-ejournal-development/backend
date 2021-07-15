@@ -17,10 +17,6 @@ class RefreshToken(Resource):
                 'error_message': 'No refresh token provided'
             }
 
-        result = JWRefreshTokens.get_token(args['refresh_token'])
-
-        email = JWRefreshTokens.parse_email_from_token(args['refresh_token'])
-
         check_result = JWTVerification.check_access_token(args['refresh_token'])
 
         if not check_result[0]:
@@ -28,6 +24,10 @@ class RefreshToken(Resource):
                 'result': 'Error!',
                 'error_message': check_result[1]
             }
+
+        result = JWRefreshTokens.get_token(args['refresh_token'])
+
+        email = JWRefreshTokens.parse_email_from_token(args['refresh_token'])
 
         if result:
             return {

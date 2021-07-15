@@ -23,6 +23,8 @@ class Login(Resource):
 
         result = verification.login(args['google_token'])
 
+        print(result)
+
         if len(result[0]) == 0:
             return {
                 'result': 'Error!',

@@ -1,3 +1,4 @@
+import codecs
 import datetime
 import os
 from flask_restful import reqparse
@@ -22,8 +23,8 @@ def admin():
     return serve_index()
 
 
-@app.route('/export/<type>/<id>/<date>')
-def export(type, id, date):
+@app.route('/export/<type>/<id>/<date_from>/<date_to>')
+def export(type, id, date_from, date_to):
     return serve_index()
 
 
@@ -31,13 +32,20 @@ def export(type, id, date):
 def download_report(key):
     filename = Report.check_key(key)
     if filename:
-        return send_from_directory("reports", filename, as_attachment=True)
+        abspath = os.path.abspath(".\\reports")
+        response = send_from_directory(abspath, str(filename), as_attachment=True)
+
+        response.set_cookie("downloaded_report", key)
+
+        return response
     else:
+        print('REDIRECTING TO MAIN!!!!!\n\n\n\n')
         return redirect('/main')
 
 
 @app.route('/download_logs/<date_from>/<date_to>/<key>')
 def download_logs(date_from, date_to, key):
+    key = codecs.decode(key, "hex").decode('utf-8')
     status = JWTVerification.check_access_token(key)
     if not status[0]:
         return redirect('/admin')

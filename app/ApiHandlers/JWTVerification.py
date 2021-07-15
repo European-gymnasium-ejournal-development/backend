@@ -5,8 +5,13 @@ import datetime
 
 
 def check_access_token(token):
+    print(token)
+
     if not token:
         return False, 'no token!'
+
+    if len(token.split(".")) != 3:
+        return False, 'wrong token format'
 
     header_b64, payload_b64, signature = token.split('.')
 
@@ -25,8 +30,6 @@ def check_access_token(token):
 
     now = (datetime.datetime.now() - datetime.datetime.utcfromtimestamp(0)).total_seconds()
 
-    print(payload['exp'] - now)
-    print(token)
     if payload['exp'] < now:
         return False, 'expired'
 

@@ -47,6 +47,8 @@ def update_refresh_token(email):
     tokens = (generate_token(email, Metadata.JSON_WEB_REFRESH_TOKEN_LIFETIME),
               generate_token(email, Metadata.JSON_WEB_ACCESS_TOKEN_LIFETIME))
 
+    print("tokens", tokens)
+
     if len(tokens[0]) == 0:
         return "", ""
 

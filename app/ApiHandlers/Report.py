@@ -1,3 +1,4 @@
+import codecs
 import datetime
 import json
 import os
@@ -12,27 +13,34 @@ from fpdf import FPDF
 
 
 def gen_key(filename):
-    filename_code = base64.b64encode(filename)
+    filename_code = base64.b64encode(filename.encode('utf-8')).decode('utf-8')
 
 
     expiration = datetime.datetime.now() + datetime.timedelta(seconds=10)
     epoch = datetime.datetime(1970, 1, 1)
     timestamp = (expiration - epoch) // datetime.timedelta(microseconds=1)
-    expiration_code = base64.b64decode(str(timestamp))
+    print(timestamp)
+    expiration_code = str(timestamp)
 
-    sumstring = filename + expiration_code + Metadata.SECRET_KEY
+    sumstring = (filename_code + expiration_code + Metadata.SECRET_KEY).encode('ascii')
 
-    hash = sha256(sumstring)
+    hash = sha256(sumstring).hexdigest()
     key = filename_code + "." + expiration_code + "." + hash
+    key = str(key.encode('utf-8').hex())
     return key
 
 
 def check_key(key):
-    filename_code, timestamp_code, hash = key.split('.')
-    filename = base64.b64decode(filename_code)
-    timestamp = base64.b64decode(timestamp_code)
+    key = codecs.decode(key, "hex").decode('utf-8')
 
-    sumstring = filename + timestamp + Metadata.SECRET_KEY
+    if len(key.split(".")) != 3:
+        return False
+
+    filename_code, timestamp, hash = key.split('.')
+
+    filename = base64.b64decode(filename_code).decode('utf-8')
+
+    sumstring = (filename_code + timestamp + Metadata.SECRET_KEY).encode('ascii')
 
     epoch = datetime.datetime(1970, 1, 1)
 
@@ -42,9 +50,13 @@ def check_key(key):
         return False
 
     if datetime.datetime.now() > (epoch + datetime.timedelta(microseconds=timestamp)):
+        print('TIME PROBLEM!!!\n\n\n')
         return False
 
-    hash_check = sha256(sumstring)
+    hash_check = sha256(sumstring).hexdigest()
+
+    print(hash_check)
+    print(hash)
     if hash_check == hash:
         return filename
     else:
@@ -57,14 +69,16 @@ class ReportApi(Resource):
         parser.add_argument('access_token', location='cookies', type=str)
         parser.add_argument('date_from', type=str, required=True, help="Date from is not given")
         parser.add_argument('date_to', type=str, required=True, help="Date to is not given")
-        parser.add_argument('student_id', type=int, required=True, help="Student id is not given")
-        parser.add_argument('comment', type=str)
         parser.add_argument('only_summative', type=bool, required=True, help="Only summative is not given")
         parser.add_argument('subjects_list', type=str, required=True, help="Subjects list is not given")
+        parser.add_argument('student_id', type=int, required=True, help="Student id is not given")
+        parser.add_argument('comment', type=str)
 
         try:
             args = parser.parse_args()
-        except TypeError as e:
+            print(args)
+        except Exception as e:
+            print(e)
             return {
                 "result": "Error!",
                 "error_message": str(e)
@@ -72,6 +86,8 @@ class ReportApi(Resource):
 
         if args['comment'] is None:
             args['comment'] = ""
+        else:
+            args['comment'] = codecs.decode(args['comment'], "hex").decode('utf-8')
 
         status = check_access_token(args['access_token'])
 
@@ -94,11 +110,14 @@ class ReportApi(Resource):
 
         if status[0]:
             email = JWRefreshTokens.parse_email_from_token(args['access_token'])
-            creator = Teachers.get_teacher(email)
+            creator_name = Teachers.get_teacher(email)
 
             # такие поля: student['name'], student['id'], student['grade']
             student = Students.get_student(args['student_id'])
-            filename = "report_by_" + creator.replace(' ', '_') + "-" + student['name'].replace(' ', '_') + ".pdf"
+
+            my_subjects = [subject['id'] for subject in Subjects.get_student_subjects(student['id'])]
+
+            filename = "report_by_" + creator_name.replace(' ', '_') + "-" + student['name'].replace(' ', '_') + ".pdf"
             key = gen_key(filename)
 
             date_today = datetime.datetime.now()
@@ -107,10 +126,13 @@ class ReportApi(Resource):
 
             pdf = FPDF()
             pdf.add_page()
-            pdf.set_font("Arial", size=12)
+            # Тут надо использовать русские шрифты
+            # https://github.com/reingart/pyfpdf/releases
+            pdf.add_font("DejaVu", '', 'fonts\\DejaVuSans.ttf', uni=True)
+            pdf.set_font("DejaVu", size=12)
             pdf.cell(w=200, h=10, txt="Отчет о работе", ln=1, align="C")
 
-            prepared_text = "Подготовил(а): " + creator['name'] + " (" + creator['email'] + ")"
+            prepared_text = "Подготовил(а): " + creator_name + " (" + email + ")"
 
             pdf.cell(w=200, h=10, txt=prepared_text, ln=1, align="C")
 
@@ -118,20 +140,36 @@ class ReportApi(Resource):
             # TODO: тут пока просто записать заголовок. Оценки и таблицы будут дальше
 
             for subject in subjects_list:
-                subject_obj = Subjects.get_subject(subject)
-
-                if subject_obj is None:
+                if subject not in my_subjects:
                     continue
 
                 # такие поля: teacher['email'], teacher['access_level'], teacher['name']
                 # teachers - это список учителей
                 teachers = Subjects.get_subjects_teachers(subject)
 
+                # параметры: subject_obj['id'], subject_obj['name']
+                subject_obj = Subjects.get_subject(subject)
+
+                if subject_obj is None:
+                    continue
+
+                # TODO: заполнить шапку с предметами
+
+
+            for subject in subjects_list:
+                if subject not in my_subjects:
+                    continue
+
+                subject_obj = Subjects.get_subject(subject)
+
+                if subject_obj is None:
+                    continue
+
                 # такие поля: mark['student_id'], mark['task_id'], mark['mark'] (это значение), mark['max_mark'],
                 # mark['criteria'], mark['type'] (summative/formative), mark['timestamp'] (YYYY-MM-DD),
                 # mark['description'] (описание задания)
                 # marks - это список из оценок
-                marks = Marks.get_marks(args['time_from'], args['time_to'], student['id'], subject)
+                marks = Marks.get_marks(args['date_from'], args['date_to'], student['id'], subject)
 
                 if len(marks) == 0:
                     continue
