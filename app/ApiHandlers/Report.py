@@ -1,8 +1,8 @@
 import codecs
 import datetime
 import json
+import math
 import os
-
 from flask_restful import Resource, reqparse
 from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Students, Teachers, Subjects, Tasks, Marks, JWRefreshTokens
@@ -10,11 +10,17 @@ from config import Metadata
 from hashlib import sha256
 import base64
 from fpdf import FPDF
+from functools import partial
+
+
+TITLE_FONT = "DejaVu", 14
+SMALL_TEXT_FONT = "DejaVu", 10
+TABLE_TEXT_FONT = "DejaVu", 12
+MAIN_TEXT_FONT = "DejaVu", 12
 
 
 def gen_key(filename):
     filename_code = base64.b64encode(filename.encode('utf-8')).decode('utf-8')
-
 
     expiration = datetime.datetime.now() + datetime.timedelta(seconds=10)
     epoch = datetime.datetime(1970, 1, 1)
@@ -61,6 +67,138 @@ def check_key(key):
         return filename
     else:
         return False
+
+
+def date_year_to_date_month(date):
+    month, day = date.split('-')[1:]
+    date_str = '.'.join([day, month])
+    return date_str
+
+
+def generate_table(marks):
+    print(marks)
+
+    dates = set()
+    for mark in marks:
+        dates.add(mark['timestamp'])
+
+    dates = list(dates)
+    dates.sort()
+
+    header = [['Критерий\\Дата']]
+    for date in dates:
+        header.append([date_year_to_date_month(date)])
+
+    criterias = ['A', 'B', 'C', 'D', '0']
+    table = [header]
+
+    for criteria in criterias:
+        line = [[criteria if criteria != '0' else 'Без критерия']]
+        for time in header[1:]:
+            markslist = []
+            for mark in marks:
+                print(time, date_year_to_date_month(mark['timestamp']))
+                if mark['criteria'] == criteria and date_year_to_date_month(mark['timestamp']) == time[0]:
+                    markslist.append(mark)
+
+            line.append(markslist)
+        table.append(line)
+
+    return table
+
+
+def draw_table(pdf, table, hat_drawer):
+    partsCount = math.ceil((len(table[0]) - 1) / Metadata.REPORT_TABLE_WIDTH)
+    index = 1
+    pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1])
+
+    for part_index in range(0, partsCount):
+        index = 1 + part_index * Metadata.REPORT_TABLE_WIDTH
+        if part_index % Metadata.TABLES_PER_PAGE == 0 and part_index > 0:
+            pdf.add_page()
+            hat_drawer()
+        else:
+            pdf.ln(20)
+
+        pdf.set_draw_color(0, 96, 160)
+
+        pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1])
+
+        table_part = [
+            [line[0]] + line[index: min(len(table[0]), index + Metadata.REPORT_TABLE_WIDTH)] for line in table
+        ]
+
+        table_width = int(pdf.w * 0.9)
+        col_width = table_width // (Metadata.REPORT_TABLE_WIDTH + 3)
+
+        table_height = 0
+
+        row_height = int(pdf.font_size * 1.5)
+
+        for line in table_part:
+            line_height = row_height * max([len(x) for x in line])
+            table_height += line_height
+
+        for line_index, line in enumerate(table_part):
+            line_height = row_height * max([len(x) for x in line])
+
+            if line_index != len(table_part) - 1:
+                pdf.line(pdf.get_x(), pdf.get_y() + line_height, pdf.get_x() + table_width, pdf.get_y() + line_height)
+
+            for cell_index, cell in enumerate(line):
+                if cell_index == 0:
+                    width = col_width * 3
+                else:
+                    width = col_width
+
+                if line_index == 0 and cell_index != len(line) - 1:
+                    pdf.line(pdf.get_x() + width, pdf.get_y(), pdf.get_x() + width, pdf.get_y() + table_height)
+
+                if line_index == 0:
+                    pdf.cell(width, line_height, txt=cell[0], border=0, align='C')
+
+                else:
+                    for index, mark in enumerate(cell):
+                        if cell_index > 0:
+                            if mark['mark'] == 'N/A':
+                                text = mark['mark']
+                            else:
+                                text = mark['mark'] + "/" + mark['max_mark']
+                            if mark['type'] == 'summative':
+                                pdf.set_text_color(150, 0, 0)
+                            else:
+                                pdf.set_text_color(0, 0, 0)
+                        else:
+                            text = mark
+                            pdf.set_text_color(0, 0, 0)
+
+                        ln = 2
+                        if index == len(cell) - 1:
+                            ln = 0
+
+                        print(text, ln)
+                        pdf.cell(width, row_height, txt=text, border=0, ln=ln, align='C')
+                    if len(cell) == 0:
+                        pdf.cell(width, row_height, txt="", border=0, ln=0)
+                    else:
+                        pdf.set_xy(pdf.get_x(), pdf.get_y() - ((len(cell) - 1) * row_height))
+
+            pdf.ln(line_height)
+
+
+def page_hat(pdf, student, date_from, date_to, creator, subject):
+    pdf.set_font(SMALL_TEXT_FONT[0], size=SMALL_TEXT_FONT[1])
+    pdf.line(pdf.get_x(), pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
+    text = student['name'] + " | " + student['grade_name'] + " | " + date_from.strftime("%d.%m.%Y") + " - " \
+           + date_to.strftime("%d.%m.%Y") + " | " + creator + " | " + subject['name']
+    pdf.cell(pdf.w - pdf.get_x() * 2, pdf.font_size * 2, txt=text, align='C', ln=1)
+    pdf.line(pdf.get_x(), pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
+    pdf.ln(pdf.font_size * 2)
+
+
+def title(pdf, subject):
+    pdf.set_font(TITLE_FONT[0], size=TITLE_FONT[1])
+    pdf.cell(pdf.w - 2 * pdf.get_x(), pdf.font_size * 2, txt=subject['name'], align='C', ln=0)
 
 
 class ReportApi(Resource):
@@ -112,12 +250,14 @@ class ReportApi(Resource):
             email = JWRefreshTokens.parse_email_from_token(args['access_token'])
             creator_name = Teachers.get_teacher(email)
 
-            # такие поля: student['name'], student['id'], student['grade']
+            # такие поля: student['name'], student['id'], student['grade_name']
             student = Students.get_student(args['student_id'])
 
             my_subjects = [subject['id'] for subject in Subjects.get_student_subjects(student['id'])]
 
-            filename = "report_by_" + creator_name.replace(' ', '_') + "-" + student['name'].replace(' ', '_') + ".pdf"
+            filename = datetime.datetime.now().strftime("%Y-%m-%d") + "_" + student['name'].replace(' ', '_') + "_by_" \
+                       + creator_name.replace(" ", "_") + ".pdf"
+
             key = gen_key(filename)
 
             date_today = datetime.datetime.now()
@@ -155,7 +295,6 @@ class ReportApi(Resource):
 
                 # TODO: заполнить шапку с предметами
 
-
             for subject in subjects_list:
                 if subject not in my_subjects:
                     continue
@@ -174,7 +313,12 @@ class ReportApi(Resource):
                 if len(marks) == 0:
                     continue
 
-                # TODO: заполнить таблицу с текущим предметом
+                pdf.add_page()
+                title(pdf, subject_obj)
+
+                table = generate_table(marks)
+
+                draw_table(pdf, table, partial(page_hat, pdf, student, date_from, date_to, creator_name, subject_obj))
 
             pdf.output(os.path.join("reports", filename))
 

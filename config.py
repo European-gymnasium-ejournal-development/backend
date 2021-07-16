@@ -13,6 +13,8 @@ class Metadata:
     DEBUG_MODE = True
     UPDATE_DATABASE_PERIOD = 24 * 3600
     MINIMUM_UPDATE_PERIOD = 2 * 3600
+    REPORT_TABLE_WIDTH = 8
+    TABLES_PER_PAGE = 3
 
 
 def error(message):
