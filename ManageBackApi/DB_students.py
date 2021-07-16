@@ -27,20 +27,23 @@ def update_students():
     page = 1
     total_students = []
     while True:
-        url = Metadata.MANAGEBAC_URL + 'year-groups'
-        headers = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-        payload = {'page': page, 'per_page': '1000', 'archived': '(0)'}
-        y = requests.get(url, headers=headers, params=payload)
-        grades = json.loads(y.text)
-        page = page + 1  # добавляем 1 к параметру страницы
+        # Получаем из API ManageBac классы
+        url_grades = Metadata.MANAGEBAC_URL + 'year-groups'
+        headers_grades = {'auth-token': Metadata.MANAGEBAC_API_KEY}
+        payload_grades = {'page': page, 'per_page': '1000', 'archived': '(0)'}
+        response_grades = requests.get(url_grades, headers=headers_grades, params=payload_grades)
+        grades = json.loads(response_grades.text)
+        page += 1  # добавляем 1 к параметру страницы
 
-        for item1 in grades['year_groups']:  # создаём переменную в массиве студенты
-            grade_name = item1['name']
-            for student_id in item1['student_ids']:
-                url2 = Metadata.MANAGEBAC_URL + 'students/' + str(student_id)
-                headers2 = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-                y2 = requests.get(url2, headers=headers2)
-                student = json.loads(y2.text)
+        # Итерируемся по классам и по их ученикам
+        for grade in grades['year_groups']:
+            grade_name = grade['name']
+            for student_id in grade['student_ids']:
+                # Получаем данные об ученике
+                url_students = Metadata.MANAGEBAC_URL + 'students/' + str(student_id)
+                headers_students = {'auth-token': Metadata.MANAGEBAC_API_KEY}
+                response_students = requests.get(url_students, headers=headers_students)
+                student = json.loads(response_students.text)
                 name_en = student['student']['first_name'] + ' ' + student['student']['last_name']
                 total_students.append({'id': student_id, 'grade': grade_name, 'name': name_en})
 

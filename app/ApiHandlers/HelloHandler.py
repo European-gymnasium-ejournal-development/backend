@@ -2,6 +2,8 @@ from flask_restful import Api, Resource, reqparse
 from app.ApiHandlers.JWTVerification import check_access_token
 
 
+# Это вообще тестовый класс) На него можно забить
+# Возвращает hello world
 class HelloHandler(Resource):
     def get(self):
         parser = reqparse.RequestParser()

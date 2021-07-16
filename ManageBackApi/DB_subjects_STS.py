@@ -14,60 +14,75 @@ def update_subjects_tasks_marks():
     print('started updating subjects, marks and tasks')
     page = 1
     while True:
-        url = Metadata.MANAGEBAC_URL + 'classes'
-        headers = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-        payload = {'page': page, 'per_page': '1000', 'archived': '(0)'}
-        y = requests.get(url, headers=headers, params=payload)
-        subject = json.loads(y.text)
+        # Получаем информацию о предметах
+        url_subjects = Metadata.MANAGEBAC_URL + 'classes'
+        headers_subjects = {'auth-token': Metadata.MANAGEBAC_API_KEY}
+        payload_subjects = {'page': page, 'per_page': '1000', 'archived': '(0)'}
+        response_subjects = requests.get(url_subjects, headers=headers_subjects, params=payload_subjects)
+        subjects = json.loads(response_subjects.text)
         page += 1
-        for index, item1 in enumerate(subject['classes']):
-            print(str(index + 1) + " of " + str(len(subject['classes'])))
-            print(item1)
-            subject_id = item1['id']
-            subject_name = item1['name']
+        # Итерируемся по предметам
+        for subject_index, subject in enumerate(subjects['classes']):
+            # print(str(subject_index + 1) + " of " + str(len(subjects['classes'])))
+            # print(subject)
+            subject_id = subject['id']
+            subject_name = subject['name']
             subject_teachers = []
-            for teacher in item1['teachers']:
+            # Перебираем всех учителей предмета
+            for teacher in subject['teachers']:
                 if teacher['show_on_reports']:
                     subject_teachers.append(teacher['teacher_id'])
 
-            url2 = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/students'
-            headers2 = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-            y2 = requests.get(url2, headers=headers2, params=payload)
-            student = json.loads(y2.text)
+            # Получаем информацию об учениках, посещающих этот предмет
+            url_students = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/students'
+            headers_students = {'auth-token': Metadata.MANAGEBAC_API_KEY}
+            response_students = requests.get(url_students, headers=headers_students, params=payload_subjects)
+            students = json.loads(response_students.text)
 
-            print(subject_id, subject_name)
-            print(student)
+            # print(subject_id, subject_name)
+            # print(students)
 
-            add_subject(subject_id, subject_name, student['student_ids'], subject_teachers)
+            # Добавляем предмет в БД
+            add_subject(subject_id, subject_name, students['student_ids'], subject_teachers)
 
-            url3 = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/tasks'
-            headers3 = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-            y3 = requests.get(url3, headers=headers3, params=payload)
-            tasks = json.loads(y3.text)
-            for item3 in tasks['tasks']:
-                print(item3)
-                task_id = item3['id']
-                task_date = item3['due_date']
-                task_type = item3['task_type']
-                task_description = item3['name']
-                url4 = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/tasks/' + str(task_id) + '/students'
-                headers4 = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-                y4 = requests.get(url4, headers=headers4)
-                task_marks = json.loads(y4.text)
+            # Получачем все задания этого предмета
+            url_tasks = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/tasks'
+            headers_tasks = {'auth-token': Metadata.MANAGEBAC_API_KEY}
+            response_tasks = requests.get(url_tasks, headers=headers_tasks, params=payload_subjects)
+            tasks = json.loads(response_tasks.text)
 
+            # Итерируемся по заданиям
+            for task in tasks['tasks']:
+                # print(task)
+                task_id = task['id']
+                task_date = task['due_date']
+                task_type = task['task_type']
+                task_description = task['name']
+
+                # Добавляем в БД задание
                 add_task(id=task_id,
                          task_type=task_type,
                          subject_id=subject_id,
                          description=task_description,
                          time_string=task_date)
 
-                for item4 in task_marks['students']:
-                    print(item4)
-                    student_id = item4['id']
-                    if any(x == 'criteria' for x in item4['assessments']):
-                        for item5 in item4['assessments']['criteria']:
-                            criteria = item5['label']
-                            mark = item5['score']
+                # Получаем информацию об учениках, выполнивших задание
+                url_students_of_task = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/tasks/' + str(task_id) + '/students'
+                headers_students_of_task = {'auth-token': Metadata.MANAGEBAC_API_KEY}
+                response_students_of_task = requests.get(url_students_of_task, headers=headers_students_of_task)
+                students_of_task = json.loads(response_students_of_task.text)
+
+                # Итерируемся по ученикам
+                for student_of_task in students_of_task['students']:
+                    # print(student_of_task)
+                    student_id = student_of_task['id']
+                    # Ищем критерий оценки в информации об ученике
+                    if any(x == 'criteria' for x in student_of_task['assessments']):
+                        # Если находим, то итерируемся по всем критериям, по которым выставлена оценка
+                        for mark_json in student_of_task['assessments']['criteria']:
+                            # Добавляем оценку в БД
+                            criteria = mark_json['label']
+                            mark = mark_json['score']
                             max_mark = 8
                             if check_mark(mark, max_mark):
                                 add_mark(task_id=task_id,
@@ -75,11 +90,11 @@ def update_subjects_tasks_marks():
                                          criteria=criteria,
                                          mark=mark,
                                          max_mark=max_mark)
-
-                    elif any(x == 'points' for x in item4['assessments']):
+                    # Если не находим, то добавляем значение без критерия
+                    elif any(x == 'points' for x in student_of_task['assessments']):
                         criteria = '0'
-                        mark = item4['assessments']['points']['score']
-                        max_mark = item4['assessments']['points']['max_score']
+                        mark = student_of_task['assessments']['points']['score']
+                        max_mark = student_of_task['assessments']['points']['max_score']
                         if check_mark(mark, max_mark):
                             add_mark(task_id=task_id,
                                      student_id=student_id,
@@ -87,6 +102,6 @@ def update_subjects_tasks_marks():
                                      mark=mark,
                                      max_mark=max_mark)
 
-        if subject['meta']['current_page'] == subject['meta']['total_pages']:
+        if subjects['meta']['current_page'] == subjects['meta']['total_pages']:
             break
     print('finished updating subjects, marks and tasks')

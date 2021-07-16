@@ -3,8 +3,10 @@ from flask_restful import Api, Resource, reqparse
 from flask import make_response
 
 
+# Выход из сайта
 class Logout(Resource):
     def get(self):
+        # Просто куки, отвечающие за токены доступа очищаем)
         resp = make_response({'result': 'OK'})
         resp.set_cookie('access_token', "q")
         resp.set_cookie('refresh_token', "q")
@@ -12,6 +14,7 @@ class Logout(Resource):
         return resp
 
 
+# Вход в систему
 class Login(Resource):
     def get(self):
         parser = reqparse.RequestParser()
@@ -19,24 +22,20 @@ class Login(Resource):
 
         args = parser.parse_args()
 
-        print(args['google_token'])
-
+        # С помощью гугла проверяем, хороший ли токен гугла
+        # Эта же функция в случае успеха создает нам токены доступа к нашему сайту
         result = verification.login(args['google_token'])
 
-        print(result)
-
+        # Если токен пустой, значит что-то не так(
         if len(result[0]) == 0:
             return {
                 'result': 'Error!',
                 'error_message': 'Login failed!'
             }
         else:
+            # Если все ок пишем токены в куки пользователя
             resp = make_response({'result': 'OK'})
             resp.set_cookie('access_token', result[1])
             resp.set_cookie('refresh_token', result[0])
-
-            print(resp.status)
-            print(resp.headers)
-            print(resp.get_data())
 
             return resp

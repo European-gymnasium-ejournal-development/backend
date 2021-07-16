@@ -89,7 +89,7 @@ def user_input_time_to_datetime(time):
 
 # Функция получения всех оценок ученика по предмету за период
 # Возвращает список словарей
-def get_marks(time_from, time_to, student_id, subject_id):
+def get_marks(time_from, time_to, student_id, subject_id, only_summative=False):
     timestamp_begin = user_input_time_to_datetime(time_from)
     timestamp_end = user_input_time_to_datetime(time_to)
 
@@ -99,8 +99,12 @@ def get_marks(time_from, time_to, student_id, subject_id):
 
     request_tasks = Tasks.Task.query.filter(Tasks.Task.timestamp >= timestamp_begin)\
                                     .filter(Tasks.Task.timestamp <= timestamp_end)\
-                                    .filter_by(subject_id=subject_id)\
-                                    .with_entities(Tasks.Task.id)
+                                    .filter_by(subject_id=subject_id)
+
+    if only_summative:
+        request_tasks = request_tasks.filter_by(task_type=Tasks.name_to_tasktype('summative'))
+
+    request_tasks = request_tasks.with_entities(Tasks.Task.id)
 
     # request_marks = Mark.query.join(Tasks.Task, Mark.task_id == Tasks.Task.id)\
     #    .filter(Mark.student_id == student_id).filter(Tasks.Task.timestamp <= timestamp_end)\

@@ -30,26 +30,31 @@ def export(type, id, date_from, date_to):
 
 @app.route('/download_report/<key>')
 def download_report(key):
+    # Проверяем валидность ключа
     filename = Report.check_key(key)
+    # Если валиден, то возвращаем файл пользователю
     if filename:
         abspath = os.path.abspath(".\\reports")
         response = send_from_directory(abspath, str(filename), as_attachment=True)
-
+        # задаем куки с данными об этом файле, чтобы пользователь знал, когда ему придет файл
         response.set_cookie("downloaded_report", key)
 
         return response
     else:
-        print('REDIRECTING TO MAIN!!!!!\n\n\n\n')
+        # иначе перенаправляем пользователя на основную страницу
         return redirect('/main')
 
 
 @app.route('/download_logs/<date_from>/<date_to>/<key>')
 def download_logs(date_from, date_to, key):
+    # декодируем ключ доступа к файлу логов
     key = codecs.decode(key, "hex").decode('utf-8')
+    # проверяем, хорош ли ключ
     status = JWTVerification.check_access_token(key)
     if not status[0]:
         return redirect('/admin')
 
+    # пробуем распарсить данные из запроса
     try:
         date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d")
         date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d")
@@ -59,28 +64,29 @@ def download_logs(date_from, date_to, key):
     if date_from > date_to:
         return redirect('/admin')
 
-    print('parsed data... preparing logs...\n\n\n\n')
+    # собираем файл
     path = os.path.join(os.path.join('logs', 'tmp'), 'prepared.log')
     result_file = open(path, 'w')
 
+
+    # идем по всем датам от начала до конца и вписываем все логи
     current_date = date_from
-    print(date_to)
     while current_date <= date_to:
-        print(current_date)
         filename = os.path.join('logs', current_date.strftime("%Y-%m-%d") + ".log")
         if os.path.exists(filename):
             source = open(filename, 'r')
             data = source.readlines()
             result_file.write(current_date.strftime("%Y-%m-%d") + '\n')
-            result_file.write('\n'.join(data))
+            result_file.write(''.join(data))
         current_date += datetime.timedelta(days=1)
 
+    # сохраняем и отправляем файл
     result_file.close()
-    print(os.path.join('..\\logs', 'tmp'))
     abspath = os.path.abspath(os.path.join('.\\logs', 'tmp'))
     return send_from_directory(abspath, 'prepared.log', as_attachment=True)
 
 
+# добавляем ресурси API-шников
 api.add_resource(HelloHandler.HelloHandler, '/api/hello')
 api.add_resource(Login.Login, '/api/login')
 api.add_resource(RefreshToken.RefreshToken, '/api/refresh_token')

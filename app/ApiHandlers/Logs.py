@@ -5,10 +5,11 @@ import threading
 import datetime
 import os.path
 
-
+# Мьютекс для отслеживания одновременной записи в логи
 mutex = threading.Lock()
 
 
+# Функция добавления логов
 def add_log(ip, time, email, action):
     global mutex
     file_name = datetime.datetime.today().strftime("%Y-%m-%d") + ".log"
@@ -24,6 +25,7 @@ def add_log(ip, time, email, action):
     mutex.release()
 
 
+# API записи в логи
 class LogsApi(Resource):
     def get(self):
         parser = reqparse.RequestParser()
@@ -32,7 +34,7 @@ class LogsApi(Resource):
 
         args = parser.parse_args()
         status = check_access_token(args['access_token'])
-
+        # Проверяем, что пользователь авторизован
         if status[0] and args['action']:
             ip = str(reqparse.request.remote_addr)
             email = JWRefreshTokens.parse_email_from_token(args['access_token'])

@@ -3,6 +3,7 @@ from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Subjects
 
 
+# Получение предметов ученика
 class SubjectsApi(Resource):
     def get(self):
         parser = reqparse.RequestParser()
