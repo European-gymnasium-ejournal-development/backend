@@ -3,6 +3,7 @@ from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Students
 
 
+# Получение ученика по id
 class GetStudentApi(Resource):
     def get(self):
         parser = reqparse.RequestParser()
@@ -37,6 +38,7 @@ class GetStudentApi(Resource):
             }
 
 
+# Получение всех учеников класса
 class StudentsApi(Resource):
     def get(self):
         parser = reqparse.RequestParser()

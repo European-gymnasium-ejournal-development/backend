@@ -53,6 +53,7 @@ def get_all_students_of_grade(grade_name, part_of_name=""):
     return [item.to_json() for item in request]
 
 
+# Возвращает ученика по id или None
 def get_student(id):
     request = Student.query.filter_by(id=id).first()
     if request is not None:

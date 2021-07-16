@@ -3,6 +3,7 @@ from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Marks
 
 
+# API получения списка оценок
 class MarksApi(Resource):
     def get(self):
         parser = reqparse.RequestParser()
@@ -15,6 +16,7 @@ class MarksApi(Resource):
 
         args = parser.parse_args()
 
+        # Проверяем, что все аргументы нам переданы
         for arg in expected_args:
             if not args[arg]:
                 return {
@@ -38,8 +40,10 @@ class MarksApi(Resource):
                 'error_message': 'subject_id should be integer'
             }
 
+        # Проверяем, что пользователь авторизован
         status = check_access_token(args['access_token'])
         if status[0]:
+            # Получаем оценки из БД
             marks_list = Marks.get_marks(student_id=args['student_id'], time_from=args['time_from'],
                                          time_to=args['time_to'], subject_id=args['subject_id'])
 

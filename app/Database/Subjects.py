@@ -37,6 +37,7 @@ class SubjectToStudentMapping(db.Model):
         }
 
 
+# Соответствие учителей предметам, которые они ведут
 class SubjectsToTeachersMapping(db.Model):
     __tablename__ = "subjects_to_teachers"
     id = Column('id', Integer, autoincrement=True, primary_key=True, unique=True)
@@ -59,6 +60,7 @@ class SubjectsToTeachersMapping(db.Model):
 # id - id предмета в ManageBac
 # subject_name - название предмета
 # students_ids - список id студентов, посещающих курс
+# teachers - список id учителей, которые ведут курс
 def add_subject(id, subject_name, students_ids, teachers):
     existing_subject = Subject.query.filter_by(id=id)
 
@@ -102,6 +104,7 @@ def get_student_subjects(student_id):
     return [item.to_json() for item in request_subjects.all()]
 
 
+# Получение списка учителей, которые ведут курс с id subject_id
 def get_subjects_teachers(subject_id):
     request = SubjectsToTeachersMapping.query.filter_by(subject_id=subject_id)\
         .with_entities(SubjectsToTeachersMapping.teacher_id)
@@ -110,6 +113,7 @@ def get_subjects_teachers(subject_id):
     return [item.to_json() for item in teachers_request.all()]
 
 
+# Получение информации о предмете по его id
 def get_subject(subject_id):
     request = Subject.query.filter_by(id=subject_id).first()
     if request is not None:

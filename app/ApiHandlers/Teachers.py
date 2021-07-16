@@ -4,6 +4,7 @@ from app.Database import JWRefreshTokens
 from app.Database import Teachers
 
 
+# Получение информации об учителе (о себе)
 class TeachersApi(Resource):
     def get(self):
         parser = reqparse.RequestParser()
@@ -13,6 +14,7 @@ class TeachersApi(Resource):
         status = check_access_token(args['access_token'])
 
         if status[0]:
+            # Получаем email из токена доступа к сайту и по email-у получаем информацию об учителе
             email = JWRefreshTokens.parse_email_from_token(args['access_token'])
             access_level = Teachers.get_access_level(email)
             name = Teachers.get_teacher(email)
