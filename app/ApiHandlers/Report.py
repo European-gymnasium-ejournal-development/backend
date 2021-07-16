@@ -447,14 +447,13 @@ class ReportApi(Resource):
                 if len(marks) == 0:
                     continue
 
-
                 # Собираем таблицу с оценками
                 table = generate_table(marks)
 
                 # Рисуем эту таблицу и обновляем значение offset (см. документацию к draw_table)
                 draw_table(pdf, table,
-                                   partial(page_hat, pdf, student, date_from, date_to, creator_name, subject_obj),
-                                   subject_obj)
+                           partial(page_hat, pdf, student, date_from, date_to, creator_name, subject_obj),
+                           subject_obj)
 
             # Сохраняем в файл
             pdf.output(os.path.join("reports", filename))
