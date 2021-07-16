@@ -12,12 +12,24 @@ import base64
 from fpdf import FPDF
 from functools import partial
 
-# Модуль создания отчета
 
-TITLE_FONT = "Trebuchet MS", 14
-SMALL_TEXT_FONT = "Trebuchet MS", 9
-TABLE_TEXT_FONT = "Trebuchet MS", 12
-MAIN_TEXT_FONT = "Trebuchet MS", 12
+def jshex_to_str(data):
+    char_parts = [data[i: i + 4] for i in range(0, len(data), 4)]
+    result = ""
+    for char in char_parts:
+        result += chr(int(char, 16))
+
+    return result
+
+
+# Модуль создания отчета
+TITLE_FONT = "TEST", 18
+INFO_FONT = "TEST", 14
+SUBJECT_TITLE_FONT = "TEST", 14
+SMALL_TEXT_FONT = "TEST", 9
+TABLE_TEXT_FONT = "TEST", 12
+MAIN_TEXT_FONT = "TEST", 12
+STUDENT_INFO_FONT = "TEST", 11
 BLUE_COLOR = 0, 96, 160
 
 AFTER_SUBJECT_SPACE = 20
@@ -306,11 +318,81 @@ def page_hat(pdf, student, date_from, date_to, creator, subject):
 def title(pdf, subject):
     # Задаем шрифты
     pdf.set_text_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
-    pdf.set_font(TITLE_FONT[0], size=TITLE_FONT[1])
+    pdf.set_font(SUBJECT_TITLE_FONT[0], size=SUBJECT_TITLE_FONT[1])
     # Рисуем заголовок
     pdf.cell(pdf.w - 2 * pdf.get_x(), pdf.font_size * 2, txt=subject['name'], align='C', ln=0)
     # Отступаем
     pdf.ln(AFTER_TITLE_SPACE)
+
+
+def title_part(pdf, date_from, date_to, only_summative):
+    date_format = "%d.%m.%Y"
+    date_today = datetime.datetime.now().strftime(date_format)
+    marks_param = "Only summative marks" if only_summative else "All student's marks"
+
+    pdf.image("resources\\icon.png", x=10, y=12, w=50)
+
+    pdf.set_font(TITLE_FONT[0], size=TITLE_FONT[1])
+    pdf.set_text_color(0, 102, 159)
+    pdf.set_xy(pdf.get_x() + pdf.w * 0.4, pdf.get_y())
+    pdf.cell(pdf.w * 0.3, pdf.font_size * 2, txt="European Gymnasium", ln=2, align="L")
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
+    pdf.cell(pdf.w * 0.3, pdf.font_size * 2, txt="Prepared: " + date_today, border=0, ln=2, align='L')
+
+    pdf.cell(pdf.w * 0.3, pdf.font_size * 2, txt="From: " + date_from.strftime(date_format), border=0, ln=2, align='L')
+
+    pdf.cell(pdf.w * 0.3, pdf.font_size * 2, txt="To: " + date_to.strftime(date_format), border=0, ln=2, align='L')
+    # pdf.cell(113, 1, "",0,0,'L')
+    pdf.cell(pdf.w * 0.3, pdf.font_size * 2, txt=marks_param, border=0, ln=1, align='L')
+
+    pdf.ln(10)
+
+
+def student_info(pdf, student_name, grade, account_name, comment):
+    pdf.set_draw_color(0, 102, 159)
+    pdf.set_line_width(0.5)
+
+    line_delta = 5
+
+    pdf.line(pdf.get_x() + line_delta, pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
+
+    pdf.set_font(STUDENT_INFO_FONT[0], size=STUDENT_INFO_FONT[1])
+    pdf.set_text_color(0, 102, 159)
+    pdf.cell(pdf.w * 0.2, pdf.font_size * 2, "Student name: ", border=0, ln=0, align='L')
+
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(pdf.w * 0.5, pdf.font_size * 2, student_name, border=0, ln=1, align='L')
+
+    pdf.set_line_width(0.2)
+    pdf.line(pdf.get_x() + line_delta, pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
+
+    pdf.set_text_color(0, 102, 159)
+    pdf.cell(pdf.w * 0.2, pdf.font_size * 2, "Grade: ", border=0, ln=0, align='L')
+
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(pdf.w * 0.5, pdf.font_size * 2, grade, border=0, ln=1, align='L')
+
+    pdf.line(pdf.get_x() + line_delta, pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
+
+    pdf.set_text_color(0, 102, 159)
+    pdf.cell(pdf.w * 0.2, pdf.font_size * 2, "Adviser: ", border=0, ln=0, align='L')
+
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(pdf.w * 0.5, pdf.font_size * 2, account_name, border=0, ln=1, align='L')
+
+    pdf.line(pdf.get_x(), pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
+
+    pdf.ln(pdf.font_size)
+
+    if len(comment) > 0:
+        pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
+        pdf.cell(pdf.w * 0.5, pdf.font_size * 2, "Comments:", border=0, ln=1, align='L')
+
+        pdf.set_xy(pdf.get_x() + 5, pdf.get_y())
+
+        pdf.set_font(STUDENT_INFO_FONT[0], size=STUDENT_INFO_FONT[1])
+        pdf.multi_cell(w=pdf.w - (pdf.get_x() * 2), h=pdf.font_size * 1.5, txt=comment, border=0, align='L')
 
 
 # API создание отчета
@@ -342,8 +424,15 @@ class ReportApi(Resource):
         if args['comment'] is None:
             args['comment'] = ""
         else:
-            # Иначе нам его передали в hex формате, чтобы не было кринж-символов
-            args['comment'] = codecs.decode(args['comment'], "hex").decode('utf-8')
+            try:
+                # Иначе нам его передали в hex формате, чтобы не было кринж-символов
+                args['comment'] = jshex_to_str(args['comment'])
+            except Exception as e:
+                print(e)
+                return {
+                    'result': 'Error!',
+                    'error_message': str(e)
+                }
 
         # Проверяем, есть ли у пользователя доступ
         status = check_access_token(args['access_token'])
@@ -388,22 +477,19 @@ class ReportApi(Resource):
             date_today = datetime.datetime.now()
 
             show_only_summative = args['only_summative'] == 1
-            print("show_only_summative", show_only_summative)
 
             # Создаем pdf-ку, в которую будем писать
             pdf = FPDF()
             pdf.add_page()
             # Тут надо использовать русские шрифты
-            pdf.add_font("Trebuchet MS", '', 'fonts\\trebuchet.ttf', uni=True)
-            pdf.set_font("Trebuchet MS", size=12)
-            pdf.cell(w=200, h=10, txt="Отчет о работе", ln=1, align="C")
+            pdf.add_font("TEST", '', 'resources\\trebuchet.ttf', uni=True)
+            # pdf.add_font("Trebuchet MS", '', 'resources\\trebuchet.ttf', uni=True)
+            pdf.set_font("TEST", size=12)
 
-            prepared_text = "Подготовил(а): " + creator_name + " (" + email + ")"
+            title_part(pdf, date_from, date_to, show_only_summative)
+            student_info(pdf, student['name'], student['grade_name'], creator_name, args['comment'])
 
-            pdf.cell(w=200, h=10, txt=prepared_text, ln=1, align="C")
-
-            # TODO: создать и сформировать файл с отчетом
-            # TODO: тут пока просто записать заголовок. Оценки и таблицы будут дальше
+            pdf.add_page()
 
             for subject in subjects_list:
                 if subject not in my_subjects:
