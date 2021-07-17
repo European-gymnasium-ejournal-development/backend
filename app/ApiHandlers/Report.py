@@ -23,13 +23,16 @@ def jshex_to_str(data):
 
 
 # Модуль создания отчета
-TITLE_FONT = "TEST", 18
-INFO_FONT = "TEST", 14
-SUBJECT_TITLE_FONT = "TEST", 14
-SMALL_TEXT_FONT = "TEST", 9
-TABLE_TEXT_FONT = "TEST", 12
-MAIN_TEXT_FONT = "TEST", 12
-STUDENT_INFO_FONT = "TEST", 11
+TITLE_FONT = "Trebuchet MS", 18
+INFO_FONT = "Trebuchet MS", 14
+SUBJECT_TITLE_FONT = "Trebuchet MS", 14
+SMALL_TEXT_FONT = "Trebuchet MS", 9
+TABLE_TEXT_FONT = "Trebuchet MS", 12
+MAIN_TEXT_FONT = "Trebuchet MS", 12
+STUDENT_INFO_FONT = "Trebuchet MS", 11
+
+SUBJECT_OFFSET = 24
+
 BLUE_COLOR = 0, 96, 160
 
 AFTER_SUBJECT_SPACE = 20
@@ -123,7 +126,7 @@ def generate_table(marks):
     dates.sort()
 
     # Соберем заголовок таблицы
-    header = [['Критерий\\Дата']]
+    header = [['Criteria\\Date']]
     for date in dates:
         header.append([date_year_to_date_month(date)])
 
@@ -134,7 +137,7 @@ def generate_table(marks):
     # Сложность алгоритма по времени O(n^2), где n - кол-во оценок, но n обычно маленькое, так что пофиг на сложность
     for criteria in criterias:
         # Добавим заголовок в строку таблицы
-        line = [[criteria if criteria != '0' else 'Без критерия']]
+        line = [[criteria if criteria != '0' else 'No criteria']]
         # Идем по всем датам, которые когда-либо встречались
 
         for time in header[1:]:
@@ -173,7 +176,7 @@ def draw_table(pdf, table, hat_drawer, subject):
 
         # Считаем размер колонок
         table_width = int(pdf.w * 0.9)
-        col_width = table_width // (Metadata.REPORT_TABLE_WIDTH + 3)
+        col_width = table_width // (Metadata.REPORT_TABLE_WIDTH + 1)
 
         table_height = 0
         # Размер одной строки в таблице (если в строке не больше одной оценки в ячейке)
@@ -186,7 +189,7 @@ def draw_table(pdf, table, hat_drawer, subject):
             table_height += line_height
 
         # Если страница кончилась, то создаем новую и рисуем шапку
-        page_height = pdf.h * 0.9
+        page_height = pdf.h * 0.95
 
         if part_index > 0:
             delta = AFTER_TABLE_SPACE
@@ -236,7 +239,7 @@ def draw_table(pdf, table, hat_drawer, subject):
             for cell_index, cell in enumerate(line):
                 # Если это первая ячейка (заголовок), то делаем ее шире и выше
                 if cell_index == 0:
-                    width = col_width * 3
+                    width = col_width * 1
                     height = line_height
                 else:
                     # Иначе обычная ширина, а высоту растягиваем так, чтобы все было красиво отцентрированно
@@ -248,6 +251,11 @@ def draw_table(pdf, table, hat_drawer, subject):
                 # на высоту всей таблицы
                 if line_index == 0 and cell_index != len(line) - 1:
                     pdf.line(pdf.get_x() + width, pdf.get_y(), pdf.get_x() + width, pdf.get_y() + table_height)
+
+                if cell_index == 0 and len(cell[0]) > 1:
+                    pdf.set_font(SMALL_TEXT_FONT[0], size=SMALL_TEXT_FONT[1])
+                else:
+                    pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1])
 
                 # Если это первая строка (заголовок с датами), то просто пишем текст
                 if line_index == 0:
@@ -333,7 +341,7 @@ def title_part(pdf, date_from, date_to, only_summative):
     pdf.image("resources\\icon.png", x=10, y=12, w=50)
 
     pdf.set_font(TITLE_FONT[0], size=TITLE_FONT[1])
-    pdf.set_text_color(0, 102, 159)
+    pdf.set_text_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
     pdf.set_xy(pdf.get_x() + pdf.w * 0.4, pdf.get_y())
     pdf.cell(pdf.w * 0.3, pdf.font_size * 2, txt="European Gymnasium", ln=2, align="L")
     pdf.set_text_color(0, 0, 0)
@@ -350,7 +358,7 @@ def title_part(pdf, date_from, date_to, only_summative):
 
 
 def student_info(pdf, student_name, grade, account_name, comment):
-    pdf.set_draw_color(0, 102, 159)
+    pdf.set_draw_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
     pdf.set_line_width(0.5)
 
     line_delta = 5
@@ -358,7 +366,7 @@ def student_info(pdf, student_name, grade, account_name, comment):
     pdf.line(pdf.get_x() + line_delta, pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
 
     pdf.set_font(STUDENT_INFO_FONT[0], size=STUDENT_INFO_FONT[1])
-    pdf.set_text_color(0, 102, 159)
+    pdf.set_text_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
     pdf.cell(pdf.w * 0.2, pdf.font_size * 2, "Student name: ", border=0, ln=0, align='L')
 
     pdf.set_text_color(0, 0, 0)
@@ -367,7 +375,7 @@ def student_info(pdf, student_name, grade, account_name, comment):
     pdf.set_line_width(0.2)
     pdf.line(pdf.get_x() + line_delta, pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
 
-    pdf.set_text_color(0, 102, 159)
+    pdf.set_text_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
     pdf.cell(pdf.w * 0.2, pdf.font_size * 2, "Grade: ", border=0, ln=0, align='L')
 
     pdf.set_text_color(0, 0, 0)
@@ -375,7 +383,7 @@ def student_info(pdf, student_name, grade, account_name, comment):
 
     pdf.line(pdf.get_x() + line_delta, pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
 
-    pdf.set_text_color(0, 102, 159)
+    pdf.set_text_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
     pdf.cell(pdf.w * 0.2, pdf.font_size * 2, "Adviser: ", border=0, ln=0, align='L')
 
     pdf.set_text_color(0, 0, 0)
@@ -393,6 +401,47 @@ def student_info(pdf, student_name, grade, account_name, comment):
 
         pdf.set_font(STUDENT_INFO_FONT[0], size=STUDENT_INFO_FONT[1])
         pdf.multi_cell(w=pdf.w - (pdf.get_x() * 2), h=pdf.font_size * 1.5, txt=comment, border=0, align='L')
+
+
+def subjects_list_title(pdf):
+    pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
+    pdf.cell(9, 0, txt="", ln=0, align="L")
+    pdf.cell(0, pdf.font_size * 1.8, txt="List Of Subjects:", ln=1, align="L")  # Добавил титульную надпись
+    pdf.ln(pdf.font_size)
+
+    pdf.set_draw_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
+    pdf.set_line_width(0.5)
+    pdf.line(SUBJECT_OFFSET - 1, pdf.get_y(), pdf.w - SUBJECT_OFFSET + 1, pdf.get_y())
+
+
+def draw_subject(pdf, subject, teachers):
+    teacher_string = ', '.join([teacher['name'] for teacher in teachers])
+    subject = subject['name']
+
+    pdf.set_line_width(0.2)  # Нарисовал жирную верхнюю полоску и задал ширину поменьше
+    pdf.set_text_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
+    pdf.set_font(STUDENT_INFO_FONT[0], size=STUDENT_INFO_FONT[1])  # Параметры для надписи предмета
+
+    pdf.set_xy(SUBJECT_OFFSET, pdf.get_y() + pdf.font_size * 0.5)
+    pdf.cell(0, pdf.font_size * 1.1, subject, ln=1,
+             align="L")  # Задаю позицию курсора по статичному x и y из y_sub. Затем пишу название предмета
+
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font(SMALL_TEXT_FONT[0], size=SMALL_TEXT_FONT[1])  # Параметры для написания учителя
+
+    pdf.set_xy(24, pdf.get_y())
+
+    # Задаю позицию курсора по статичному x и y из y_tch. Затем пишу учителя привязанного к предмету
+    pdf.cell(0, pdf.font_size * 2, teacher_string, ln=1, align="L")
+
+    # Рисую линию по статичному x и длинне, за высоту беру y_line
+    pdf.line(SUBJECT_OFFSET - 1, pdf.get_y(), pdf.w + 1 - SUBJECT_OFFSET, pdf.get_y())
+
+
+def subjects_list_footer(pdf):
+    pdf.set_line_width(0.5)
+    # Рисую нижнюю жирную полоску. Отнимаю значение от высоты линии, чтобы она не съехала на деление вниз
+    pdf.line(SUBJECT_OFFSET - 1, pdf.get_y(), pdf.w - SUBJECT_OFFSET + 1, pdf.get_y())
 
 
 # API создание отчета
@@ -482,14 +531,16 @@ class ReportApi(Resource):
             pdf = FPDF()
             pdf.add_page()
             # Тут надо использовать русские шрифты
-            pdf.add_font("TEST", '', 'resources\\trebuchet.ttf', uni=True)
+            pdf.add_font("Trebuchet MS", '', 'resources\\trebuchet.ttf', uni=True)
             # pdf.add_font("Trebuchet MS", '', 'resources\\trebuchet.ttf', uni=True)
-            pdf.set_font("TEST", size=12)
+            pdf.set_font("Trebuchet MS", size=12)
 
             title_part(pdf, date_from, date_to, show_only_summative)
             student_info(pdf, student['name'], student['grade_name'], creator_name, args['comment'])
 
             pdf.add_page()
+
+            subjects_list_title(pdf)
 
             for subject in subjects_list:
                 if subject not in my_subjects:
@@ -511,7 +562,11 @@ class ReportApi(Resource):
                 if subject_obj is None:
                     continue
 
-                # TODO: заполнить шапку с предметами
+                draw_subject(pdf, subject_obj, teachers)
+
+            subjects_list_footer(pdf)
+
+            pdf.set_xy(pdf.get_y(), pdf.h - 1)
 
             # Пишем оценки по каждому предмету
             for subject in subjects_list:
