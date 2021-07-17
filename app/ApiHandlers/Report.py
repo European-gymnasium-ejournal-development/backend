@@ -163,7 +163,7 @@ def draw_table(pdf, table, hat_drawer, subject):
     partsCount = math.ceil((len(table[0]) - 1) / Metadata.REPORT_TABLE_WIDTH)
 
     pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1])
-
+    pdf.set_line_width(0.3)
     # Каждую часть рисуем отдельно
     for part_index in range(0, partsCount):
         # Индекс колонки в таблице, с которого начинается эта часть
