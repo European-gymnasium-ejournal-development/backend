@@ -6,3 +6,6 @@ app/Database/__pycache__
 logs
 reports
 settings.env
+dist
+build
+European_gymnasium.egg-info

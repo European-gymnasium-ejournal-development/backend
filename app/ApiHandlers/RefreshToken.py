@@ -1,6 +1,6 @@
 from flask_restful import Api, Resource, reqparse
 from app.Database import JWRefreshTokens
-from config import Metadata
+from create.config import Metadata
 from app.ApiHandlers import JWTVerification
 
 

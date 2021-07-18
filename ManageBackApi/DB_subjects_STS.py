@@ -3,7 +3,7 @@ from app.Database.Marks import add_mark
 from app.Database.Subjects import add_subject
 import requests
 import json
-from config import Metadata
+from create.config import Metadata
 
 
 def check_mark(mark, max_mark):

@@ -1,6 +1,6 @@
 import base64
 from hashlib import sha256
-from config import Metadata
+from create.config import Metadata
 import datetime
 
 

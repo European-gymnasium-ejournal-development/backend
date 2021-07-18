@@ -1,7 +1,7 @@
 from app.Database import Teachers
 import requests
 import json
-from config import Metadata
+from create.config import Metadata
 
 
 def update_teachers():

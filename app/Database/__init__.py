@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, event
 from sqlalchemy.orm import scoped_session, sessionmaker, backref, relation
 from sqlalchemy.ext.declarative import declarative_base
-from config import Metadata
+from create.config import Metadata
 from app import app
 from flask_sqlalchemy import SQLAlchemy
 

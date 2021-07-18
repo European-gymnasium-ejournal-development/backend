@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from app.Database import db, Integer, String, ForeignKey, Column, DateTime, Tasks, Students
-from config import error
+from create.config import error
 # criteria: 1 - A, 2 - B, 3 - C, 4 - D, 0 - No criteria
 
 criteria_ids = {'A': 1, 'B': 2, 'C': 3, 'D': 4, '0': 0}

@@ -6,7 +6,7 @@ import os
 from flask_restful import Resource, reqparse
 from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Students, Teachers, Subjects, Tasks, Marks, JWRefreshTokens
-from config import Metadata
+from create.config import Metadata
 from hashlib import sha256
 import base64
 from fpdf import FPDF

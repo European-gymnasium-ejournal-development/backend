@@ -4,7 +4,7 @@ import json
 from googletrans import Translator
 from google_trans_new import google_translator
 import re
-from config import Metadata
+from create.config import Metadata
 
 
 # Получает список из словарей с полями name, grade, id,

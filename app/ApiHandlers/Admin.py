@@ -1,7 +1,7 @@
 from flask_restful import Resource, reqparse
 from app.ApiHandlers.JWTVerification import check_access_token
 from app.Database import Teachers, JWRefreshTokens
-from config import Metadata
+from create.config import Metadata
 from ManageBackApi import update_all
 import os
 import sys

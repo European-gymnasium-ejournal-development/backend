@@ -1,7 +1,10 @@
+from create.config import Metadata, upload_keys
+upload_keys()
+
 from ManageBackApi.DB_subjects_STS import update_subjects_tasks_marks
 from ManageBackApi.DB_teachers import update_teachers
 from ManageBackApi.DB_students import update_students
-from config import Metadata
+
 import time
 import multiprocessing
 import threading
@@ -9,6 +12,7 @@ import threading
 
 def update_all(update_period):
     import app.Database
+
     while True:
         print(update_period)
         print('started updating all')

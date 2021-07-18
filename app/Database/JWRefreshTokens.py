@@ -1,6 +1,6 @@
 from app.Database import db, Integer, String, ForeignKey, Column, DateTime, Tasks, Teachers
 import datetime
-from config import Metadata
+from create.config import Metadata
 from hashlib import sha256
 import base64
 

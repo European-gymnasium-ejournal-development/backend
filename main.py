@@ -1,10 +1,5 @@
-import config
-config.upload_keys()
-
-from app import app
-from ManageBackApi import update_all
+from create.main import create_app
 
 
 if __name__ == '__main__':
-    update_all.restart()
-    app.run(port=5000, host='0.0.0.0')
+    create_app().run(port=5000, host='0.0.0.0')
