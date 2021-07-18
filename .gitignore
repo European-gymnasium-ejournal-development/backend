@@ -5,3 +5,4 @@ app/ApiHandlers/__pycache__
 app/Database/__pycache__
 logs
 reports
+settings.env
