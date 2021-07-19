@@ -2,7 +2,7 @@ import codecs
 import datetime
 import os
 from flask_restful import reqparse
-from  app.ApiHandlers import JWTVerification
+from app.ApiHandlers import JWTVerification
 from app import app, api
 from flask import send_from_directory, redirect
 from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers, Report
@@ -25,6 +25,7 @@ def admin():
 
 @app.route('/export/<type>/<id>/<date_from>/<date_to>')
 def export(type, id, date_from, date_to):
+    print(type, id, date_from, date_to)
     return serve_index()
 
 

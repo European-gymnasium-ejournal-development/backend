@@ -11,6 +11,7 @@ mutex = threading.Lock()
 
 # Функция добавления логов
 def add_log(ip, time, email, action):
+    time = time.strftime("%H:%M:%S")
     global mutex
     file_name = datetime.datetime.today().strftime("%Y-%m-%d") + ".log"
     path = os.path.join('logs', file_name)
@@ -39,7 +40,7 @@ class LogsApi(Resource):
             ip = str(reqparse.request.remote_addr)
             email = JWRefreshTokens.parse_email_from_token(args['access_token'])
             action = args['action']
-            time = datetime.datetime.now().strftime("%H:%M:%S")
+            time = datetime.datetime.now()
 
             add_log(ip, time, email, action)
 
