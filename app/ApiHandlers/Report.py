@@ -315,7 +315,7 @@ def page_hat(pdf, student, date_from, date_to, creator, subject):
     text = student['name'] + " | " + student['grade_name'] + " | " + date_from.strftime("%d.%m.%Y") + " - " \
            + date_to.strftime("%d.%m.%Y") + " | " + creator + " | " + subject['name']
     # Пишем заголовок
-    pdf.cell(pdf.w - pdf.get_x() * 2, pdf.font_size * 2, txt=text, align='C', ln=1)
+    pdf.multicell(pdf.w - pdf.get_x() * 2, pdf.font_size * 2, txt=text, align='C', ln=1)
     # Рисуем еще один отчерк
     pdf.line(pdf.get_x(), pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
     # Отступаем еще раз

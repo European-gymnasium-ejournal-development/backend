@@ -85,23 +85,28 @@ def update_subjects_tasks_marks():
                             mark = mark_json['score']
                             max_mark = 8
                             if check_mark(mark, max_mark):
+                                # TODO: добавить комментарий!
+                                # TODO: если даже оценки нет, то передать туда пустую строку (и в max_mark тоже)
                                 add_mark(task_id=task_id,
                                          student_id=student_id,
                                          criteria=criteria,
                                          mark=mark,
-                                         max_mark=max_mark)
+                                         max_mark=max_mark, comment="")
                     # Если не находим, то добавляем значение без критерия
                     elif any(x == 'points' for x in student_of_task['assessments']):
                         criteria = '0'
                         mark = student_of_task['assessments']['points']['score']
                         max_mark = student_of_task['assessments']['points']['max_score']
                         if check_mark(mark, max_mark):
+                            # TODO: добавить комментарий!
+                            # TODO: если даже оценки нет, то передать туда пустую строку (и в max_mark тоже)
                             add_mark(task_id=task_id,
                                      student_id=student_id,
                                      criteria=criteria,
                                      mark=mark,
-                                     max_mark=max_mark)
+                                     max_mark=max_mark, comment="")
 
+        # а точно это правильное условие? потому что, кажется, есть куча классов и учеников, у про которых известно мало
         if subjects['meta']['current_page'] == subjects['meta']['total_pages']:
             break
     print('finished updating subjects, marks and tasks')

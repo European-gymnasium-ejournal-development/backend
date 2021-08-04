@@ -60,7 +60,7 @@ def add_teacher(id, name, email, access_level):
         db.session.add(new_teacher)
     else:
         # Иначе обновляем значение записи
-        existing_teacher.update(dict(name=name, email=email, access_level=access_level))
+        existing_teacher.update(dict(name=name, email=email))
 
     db.session.commit()
 
