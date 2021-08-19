@@ -76,6 +76,7 @@ def update_subjects_tasks_marks():
                 for student_of_task in students_of_task['students']:
                     # print(student_of_task)
                     student_id = student_of_task['id']
+                    comment = student_of_task['comments']
                     # Ищем критерий оценки в информации об ученике
                     if any(x == 'criteria' for x in student_of_task['assessments']):
                         # Если находим, то итерируемся по всем критериям, по которым выставлена оценка
@@ -91,7 +92,7 @@ def update_subjects_tasks_marks():
                                          student_id=student_id,
                                          criteria=criteria,
                                          mark=mark,
-                                         max_mark=max_mark, comment="")
+                                         max_mark=max_mark, comment=comment)
                     # Если не находим, то добавляем значение без критерия
                     elif any(x == 'points' for x in student_of_task['assessments']):
                         criteria = '0'
