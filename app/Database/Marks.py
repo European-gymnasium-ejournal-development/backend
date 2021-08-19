@@ -30,12 +30,14 @@ class Mark(db.Model):
     task_id = Column('task_id', ForeignKey('tasks.id'))
     mark = Column('mark', String(16))
     max_mark = Column('max_mark', String(16))
+    comment = Column('comment', String(16000))
 
-    def __init__(self, student_id, criteria, task_id, mark, max_mark):
+    def __init__(self, student_id, criteria, task_id, mark, max_mark, comment):
         self.student_id = student_id
         self.task_id = task_id
         self.max_mark = str(max_mark)
         self.mark = str(mark)
+        self.comment = str(comment)
 
         if isinstance(criteria, int):
             if 0 <= criteria <= 4:
@@ -51,14 +53,16 @@ class Mark(db.Model):
             'task_id': self.task_id,
             'mark': self.mark,
             'criteria': id_to_criteria(self.criteria),
-            'max_mark': self.max_mark
+            'max_mark': self.max_mark,
+            'comment': self.comment
         }
 
 
 # Функция, добавляющая оценку за данное задание (task_id),
 # выставленную данному студенту (student_id), по данному критерию (A, B, C, D, 0) (criteria), с данным значением (mark)
+# комментарий к оценке - comment
 # Если оценка с такими параметрами уже существовала, то обновляем данные
-def add_mark(task_id, student_id, criteria, mark, max_mark):
+def add_mark(task_id, student_id, criteria, mark, max_mark, comment):
     try:
         criteria = criteria_to_id(criteria)
     except AttributeError:
@@ -74,11 +78,11 @@ def add_mark(task_id, student_id, criteria, mark, max_mark):
 
     # Если создаем оценку с нуля
     if existing_mark.first() is None:
-        new_mark = Mark(student_id, criteria, task_id, mark, max_mark)
+        new_mark = Mark(student_id, criteria, task_id, mark, max_mark, comment)
         db.session.add(new_mark)
     else:
         # Иначе обновляем значение оценки
-        existing_mark.update(dict(mark=str(mark), max_mark=str(max_mark)))
+        existing_mark.update(dict(mark=str(mark), max_mark=str(max_mark), comment=str(comment)))
 
     db.session.commit()
 
