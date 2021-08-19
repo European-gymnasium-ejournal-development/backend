@@ -39,7 +39,10 @@ AFTER_SUBJECT_SPACE = 20
 AFTER_TABLE_SPACE = 10
 AFTER_TITLE_SPACE = 15
 AFTER_HEADER_SPACE = 10
-
+DATE_X = 162
+MARK_X = 142
+comments = {}
+comment_number = 1
 
 # Создания ключа на скачивание файла с отчетом (название файла - filename)
 def gen_key(filename):
@@ -290,7 +293,24 @@ def draw_table(pdf, table, hat_drawer, subject):
                         if index == len(cell) - 1:
                             ln = 0
                         # Рисуем оценку
-                        pdf.cell(width, height, txt=text, border=0, ln=ln, align='C')
+                        link = pdf.addlink()
+                        comment = []
+                        pdf.cell(width, height, txt=text, border=0, ln=ln, align='C', link = link)
+                        comment.append(subject)
+                        comment.append(task_date) #Надо добавить
+                        comment.append(text) #Надо добавить
+                        comment.append(task_name)#Надо добавить
+                        comment.append(comment)#Надо добавить
+                        comments.update({link : comment})
+                        comment_number = comment_number + 1
+
+
+
+
+
+
+
+                        
                     # Если же не нарисовали ни одной оценки, то рисуем пустоту
                     if len(cell) == 0:
                         pdf.cell(width, row_height, txt="", border=0, ln=0)
@@ -443,7 +463,109 @@ def subjects_list_footer(pdf):
     # Рисую нижнюю жирную полоску. Отнимаю значение от высоты линии, чтобы она не съехала на деление вниз
     pdf.line(SUBJECT_OFFSET - 1, pdf.get_y(), pdf.w - SUBJECT_OFFSET + 1, pdf.get_y())
 
+def create_comments_title():
+    pdf.add_page()
 
+    pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
+    pdf.cell(9, 0, txt="", ln=0, align="L")
+    pdf.cell(0, pdf.font_size * 1.8, txt="Comments:", ln=1, align="L")
+    #Рисую заголовок комментариев
+
+def create_comments_data(comment_number, comments):
+
+    sub_check = comments[1][0] #Создаю переменную для проверки названия предмета
+
+    pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
+    
+    pdf.cell(0, pdf.font_size * 1.8, txt=sub_check, ln=1, align="C")
+    #Рисую название предмета
+
+    pdf.set_font(INFO_FONT[0], size = 10)
+    pdf.cell(14, 0, txt="", ln=0, align="L")
+    pdf.cell(118, pdf.font_size * 1.8, txt="Task:", ln=0, align="L")
+    pdf.cell(20, pdf.font_size * 1.8, txt="Mark:", ln=0, align="L")
+    pdf.cell(0, pdf.font_size * 1.8, txt="Date:", ln=1, align="L")
+    #Добавляю пояснения к таблице
+    
+    pdf.set_draw_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
+    pdf.set_line_width(0.5)
+    pdf.line(SUBJECT_OFFSET - 1, pdf.get_y(), pdf.w - SUBJECT_OFFSET + 1, pdf.get_y())
+    #Рисую жирную линию
+    
+    pdf.set_xy(SUBJECT_OFFSET, pdf.get_y() + pdf.font_size * 0.5)
+    #Выставляю курсор на отступ для названия таска
+    for pnum in range(1, comment_number):
+
+        com_dict = comments[pnum]
+        #Беру по очереди значения в словаре от 1 до последнего
+
+        if sub_check != com_dict[0]:
+            #Если название предмета поменялось, рисую новый заголовок предмета, на новой странице
+            pdf.add_page()
+            sub_check = com_dict[0]
+            pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
+            pdf.cell(0, pdf.font_size * 1.8, txt="", ln=1, align="L")
+            pdf.cell(0, pdf.font_size * 1.8, txt=sub_check, ln=1, align="C")
+            pdf.set_line_width(0.5)
+            pdf.set_font(INFO_FONT[0], size = 10)
+            pdf.cell(14, 0, txt="", ln=0, align="L")
+            pdf.cell(118, pdf.font_size * 1.8, txt="Task:", ln=0, align="L")
+            pdf.cell(20, pdf.font_size * 1.8, txt="Mark:", ln=0, align="L")
+            pdf.cell(0, pdf.font_size * 1.8, txt="Date:", ln=1, align="L")
+            pdf.line(SUBJECT_OFFSET - 1, pdf.get_y()-0.5, pdf.w - SUBJECT_OFFSET + 1, pdf.get_y()-0.5)
+            pdf.cell(14, 0, txt="", ln=0, align="L")
+        
+        pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1])
+        
+        pdf.set_text_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
+        
+        STRING_Y = pdf.get_y()
+        #Сохраняю высоту строки, на которой написано название таска
+        
+        pdf.multi_cell(108, pdf.font_size * 1.1, com_dict[3] , align="L")
+        #Пишу название таска
+
+        pdf.set_link(pnum, y = pdf.get_y(), page = -1)
+        #Задаю пункт назначения ссылки 
+
+        pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1] - 2)
+        pdf.set_text_color(0, 0, 0)
+        
+        pdf.cell(14, 0, txt="", ln=0, align="L")
+        pdf.multi_cell(116, pdf.font_size * 1.1, com_dict[4] , align="L")
+        #Пишу комментарий
+
+        
+        END_CORD_Y = pdf.get_y()
+        #Сохраняю высоту, на которой закончился комментарий
+        
+
+        pdf.set_text_color(0, 0, 0)
+
+        
+
+        pdf.set_xy(MARK_X,STRING_Y+1)
+        #Перевожу курсор в правую часть документа по статичному x для оценки и недавно сохранённому y
+
+        pdf.cell(0, pdf.font_size * 1.1, com_dict[2] , ln=0, align="L")
+        #Пишу оценку
+
+        pdf.set_xy(DATE_X,STRING_Y+1)
+        #Перевожу курсор в правую часть документа по статичному x для даты и недавно сохранённому y (без этого по какой-то причине иногда ломается)
+        
+        pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1] - 1)
+        
+        pdf.cell(0, pdf.font_size * 1.1, com_dict[1] , ln=0, align="L")
+        #Пишу дату
+
+
+        pdf.set_line_width(0.3)
+        pdf.line(SUBJECT_OFFSET - 0.2, END_CORD_Y+1, pdf.w - SUBJECT_OFFSET + 1, END_CORD_Y+1)
+        #Рисую линию отчерка
+        
+        pdf.set_xy(SUBJECT_OFFSET, END_CORD_Y + pdf.font_size * 0.5)
+        #Перемещаю курсор туда, где закончился комментарий
+    
 # API создание отчета
 class ReportApi(Resource):
     def get(self):
@@ -595,6 +717,12 @@ class ReportApi(Resource):
                 draw_table(pdf, table,
                            partial(page_hat, pdf, student, date_from, date_to, creator_name, subject_obj),
                            subject_obj)
+
+                #Рисуем заголовок комментариев
+                create_comments_title()
+
+                #Рисуем комментарии
+                create_comments_data(comment_number, comments)
 
             # Сохраняем в файл
             pdf.output(os.path.join("reports", filename))
