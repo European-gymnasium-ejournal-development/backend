@@ -20,7 +20,6 @@ from app.Database.JWRefreshTokens import JWRefreshToken
 
 db.create_all()
 db.session.commit()
-print(db.metadata.tables.keys())
 
 print('database initialized')
 
