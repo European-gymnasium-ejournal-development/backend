@@ -22,7 +22,6 @@ pdf.set_link(to_page_3, page=3)
 pdf.cell(pdf.w - pdf.get_x() * 2, pdf.font_size * 2, txt=text + "3", align='L', ln=1)
 
 
- 
 def simple_table(spacing=1):
     data = [['First Name', 'Last Name', 'email', 'zip'],
             ['Mike', 'Driscoll', 'mike@somewhere.com', '55555'],
@@ -42,7 +41,6 @@ def simple_table(spacing=1):
         pdf.ln(row_height*spacing)
  
 
- 
 if __name__ == '__main__':
     simple_table()
 
