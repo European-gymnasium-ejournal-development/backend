@@ -23,10 +23,8 @@ class ExcelExport(Resource):
         # Пробуем распарсить запрос
         try:
             args = parser.parse_args()
-            print(args)
         except Exception as e:
             # Если что-то не так, то возвращаем ошибку
-            print(e)
             return {
                 "result": "Error!",
                 "error_message": str(e)
@@ -50,10 +48,11 @@ class ExcelExport(Resource):
         if status[0]:
             students = Students.get_all_students_of_grade(args['grade'])
             for student in students:
-                all_marks += Marks.get_marks(date_from, date_to, student['id'], args['subject'])
+                all_marks += Marks.get_marks(args['date_from'], args['date_to'], student['id'], args['subject'])
 
             all_marks.sort(key=lambda x: x['timestamp'])
-            filename = datetime.datetime.now().strftime("%Y-%d-%m") + "-" + args['subject'] + '-' + args['grade']
+            filename = datetime.datetime.now().strftime("%Y-%d-%m") + "-" + args['subject'] + '-' \
+                       + args['grade'] + ".xlsx"
 
             generate_excel(all_marks, filename)
             key = gen_key(filename)

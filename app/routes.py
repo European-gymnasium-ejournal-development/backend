@@ -5,7 +5,8 @@ from flask_restful import reqparse
 from app.ApiHandlers import JWTVerification
 from app import app, api
 from flask import send_from_directory, redirect
-from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers, Report
+from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers, \
+    Report, ExcelExport
 
 
 @app.route('/')
@@ -23,6 +24,11 @@ def admin():
     return serve_index()
 
 
+@app.route('/excel_export/<grade_name>')
+def export_excel(grade_name):
+    return serve_index()
+
+
 @app.route('/export/<type>/<id>/<date_from>/<date_to>')
 def export(type, id, date_from, date_to):
     print(type, id, date_from, date_to)
@@ -31,6 +37,8 @@ def export(type, id, date_from, date_to):
 
 @app.route('/download_report/<key>')
 def download_report(key):
+    print("download_report")
+
     # Проверяем валидность ключа
     filename = Report.check_key(key)
     # Если валиден, то возвращаем файл пользователю
@@ -87,7 +95,7 @@ def download_logs(date_from, date_to, key):
     return send_from_directory(abspath, 'prepared.log', as_attachment=True)
 
 
-# добавляем ресурси API-шников
+# добавляем ресурсы API-шников
 api.add_resource(HelloHandler.HelloHandler, '/api/hello')
 api.add_resource(Login.Login, '/api/login')
 api.add_resource(RefreshToken.RefreshToken, '/api/refresh_token')
@@ -105,3 +113,4 @@ api.add_resource(Teachers.TeachersApi, '/api/teacher')
 api.add_resource(Login.Logout, '/api/logout')
 api.add_resource(Report.ReportApi, '/api/report')
 api.add_resource(Students.GetStudentApi, '/api/get_student')
+api.add_resource(ExcelExport.ExcelExport, '/api/excel_export')
