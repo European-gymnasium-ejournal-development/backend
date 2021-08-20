@@ -76,9 +76,11 @@ def update_subjects_tasks_marks():
                 for student_of_task in students_of_task['students']:
                     # print(student_of_task)
                     student_id = student_of_task['id']
-                    comment = student_of_task['comments']
+                    print(student_of_task)
+
                     # Ищем критерий оценки в информации об ученике
                     if any(x == 'criteria' for x in student_of_task['assessments']):
+                        comment = student_of_task['assessments']['comments']
                         # Если находим, то итерируемся по всем критериям, по которым выставлена оценка
                         for mark_json in student_of_task['assessments']['criteria']:
                             # Добавляем оценку в БД
@@ -98,6 +100,7 @@ def update_subjects_tasks_marks():
                         criteria = '0'
                         mark = student_of_task['assessments']['points']['score']
                         max_mark = student_of_task['assessments']['points']['max_score']
+                        comment = student_of_task['assessments']['comments']
                         if check_mark(mark, max_mark):
                             # TODO: добавить комментарий!
                             # TODO: если даже оценки нет, то передать туда пустую строку (и в max_mark тоже)
@@ -105,7 +108,7 @@ def update_subjects_tasks_marks():
                                      student_id=student_id,
                                      criteria=criteria,
                                      mark=mark,
-                                     max_mark=max_mark, comment="")
+                                     max_mark=max_mark, comment=comment)
 
         # а точно это правильное условие? потому что, кажется, есть куча классов и учеников, у про которых известно мало
         if subjects['meta']['current_page'] == subjects['meta']['total_pages']:

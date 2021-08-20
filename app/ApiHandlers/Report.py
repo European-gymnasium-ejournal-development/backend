@@ -30,6 +30,7 @@ SMALL_TEXT_FONT = "Trebuchet MS", 9
 TABLE_TEXT_FONT = "Trebuchet MS", 12
 MAIN_TEXT_FONT = "Trebuchet MS", 12
 STUDENT_INFO_FONT = "Trebuchet MS", 11
+PAGE_FOOTER_SIZE = 20
 
 SUBJECT_OFFSET = 24
 
@@ -40,7 +41,8 @@ AFTER_TABLE_SPACE = 10
 AFTER_TITLE_SPACE = 15
 AFTER_HEADER_SPACE = 10
 DATE_X = 162
-MARK_X = 142
+MARK_X = 132
+COMMENT_MULTI_CELL_WIDTH = 100
 
 
 # Создания ключа на скачивание файла с отчетом (название файла - filename)
@@ -160,7 +162,7 @@ def generate_table(marks):
 # table - массив массивов массивов, полученный из функции generate_table()
 # hat_drawer - функция, рисующая шапку к странице
 # subject - данные о предмете, таблицу оценок по которому рисуем
-def draw_table(pdf, table, hat_drawer, subject):
+def draw_table(pdf, table, hat_drawer, subject, link_by_task):
     # Узнаем, на сколько частей придется бить таблицу
     partsCount = math.ceil((len(table[0]) - 1) / Metadata.REPORT_TABLE_WIDTH)
 
@@ -267,10 +269,14 @@ def draw_table(pdf, table, hat_drawer, subject):
                     # Если это строка с оценками, то все сложнее
                     # Итерируемся по оценкам
                     for index, mark in enumerate(cell):
+                        link = ''
+
                         # Если это не заголовок (не название критерия)
                         if cell_index > 0:
+                            link = link_by_task[mark['task_id']]
+
                             # Выберем, какой текст писать
-                            if mark['mark'] == 'N/A':
+                            if mark['mark'] == 'N/A' or mark['max_mark'] == '8':
                                 text = mark['mark']
                             else:
                                 text = mark['mark'] + "/" + mark['max_mark']
@@ -280,6 +286,7 @@ def draw_table(pdf, table, hat_drawer, subject):
                                 pdf.set_text_color(150, 0, 0)
                             else:
                                 pdf.set_text_color(0, 0, 0)
+
                         else:
                             # Если же это название критерия, то текст - просто название, а цвет - черный
                             text = mark
@@ -291,18 +298,10 @@ def draw_table(pdf, table, hat_drawer, subject):
                         # Если же это последняя оценка, то надо после ее написания перейти вправо
                         if index == len(cell) - 1:
                             ln = 0
-                        # Рисуем оценку
-                        link = pdf.addlink()
-                        comment = []
-                        pdf.cell(width, height, txt=text, border=0, ln=ln, align='C', link = link)
 
-                        comment.append(subject['name'])
-                        comment.append(mark['timestamp'])
-                        comment.append(text)
-                        comment.append(mark['description'])
-                        comment.append(mark['comment'])
-                        comments.update({link: comment})
-                        comment_number = comment_number + 1
+                        # Рисуем оценку
+                        pdf.cell(width, height, txt=text, border=0, ln=ln, align='C',
+                                 link=link)
 
                     # Если же не нарисовали ни одной оценки, то рисуем пустоту
                     if len(cell) == 0:
@@ -328,7 +327,7 @@ def page_hat(pdf, student, date_from, date_to, creator, subject):
     text = student['name'] + " | " + student['grade_name'] + " | " + date_from.strftime("%d.%m.%Y") + " - " \
            + date_to.strftime("%d.%m.%Y") + " | " + creator + " | " + subject['name']
     # Пишем заголовок
-    pdf.multicell(pdf.w - pdf.get_x() * 2, pdf.font_size * 2, txt=text, align='C', ln=1)
+    pdf.multi_cell(pdf.w - pdf.get_x() * 2, pdf.font_size * 2, txt=text, align='C')
     # Рисуем еще один отчерк
     pdf.line(pdf.get_x(), pdf.get_y(), pdf.w - pdf.get_x(), pdf.get_y())
     # Отступаем еще раз
@@ -416,6 +415,39 @@ def student_info(pdf, student_name, grade, account_name, comment):
         pdf.multi_cell(w=pdf.w - (pdf.get_x() * 2), h=pdf.font_size * 1.5, txt=comment, border=0, align='L')
 
 
+def prepare_comments(pdf, comments_list, marks_list, subject):
+    comment_by_task = {}
+    for mark in marks_list:
+        criteria = "No criteria" if mark['criteria'] == '0' else mark['criteria']
+        text = mark['mark'] + '/' + mark['max_mark']
+
+        if mark['mark'] == "N/A" or mark['max_mark'] == '8':
+            text = mark['mark']
+
+        if mark['task_id'] not in comment_by_task.keys():
+            link = pdf.add_link()
+
+            comment = {
+                'subject': subject,
+                'timestamp': date_year_to_date_month(mark['timestamp']),
+                'mark': {criteria: text},
+                'description': mark['description'],
+                'comment_text': mark['comment'],
+                'link': link
+            }
+
+            comment_by_task[mark['task_id']] = comment
+        else:
+            comment_by_task[mark['task_id']]['mark'][criteria] = text
+
+    link_by_task = {}
+    for task_id in comment_by_task.keys():
+        link_by_task[task_id] = comment_by_task[task_id]['link']
+        comments_list.append(comment_by_task[task_id])
+
+    return link_by_task
+
+
 def subjects_list_title(pdf):
     pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
     pdf.cell(9, 0, txt="", ln=0, align="L")
@@ -466,68 +498,112 @@ def create_comments_title(pdf):
     # Рисую заголовок комментариев
 
 
-def create_comments_data(pdf, comment_number, comments):
+def draw_subject_comments_title(pdf, subject, comment):
+    # pdf.add_page()
 
-    sub_check = comments[1][0]  # Создаю переменную для проверки названия предмета
+    comment_height = get_comment_height(pdf, comment)
 
     pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
-    
-    pdf.cell(0, pdf.font_size * 1.8, txt=sub_check, ln=1, align="C")
-    # Рисую название предмета
 
+    title_height = 23 + pdf.font_size * 4
+
+    if pdf.h - pdf.get_y() - title_height - comment_height < PAGE_FOOTER_SIZE:
+        pdf.add_page()
+
+    pdf.cell(0, pdf.font_size * 1.8, txt="", ln=1, align="L")
+    pdf.cell(0, pdf.font_size * 1.8, txt=subject, ln=1, align="C")
+
+    draw_comments_hat(pdf)
+
+
+def draw_comments_hat(pdf):
+    pdf.set_line_width(0.5)
     pdf.set_font(INFO_FONT[0], size=10)
-    pdf.cell(14, 0, txt="", ln=0, align="L")
-    pdf.cell(118, pdf.font_size * 1.8, txt="Task:", ln=0, align="L")
+    pdf.set_xy(SUBJECT_OFFSET, pdf.get_y())
+    pdf.cell(COMMENT_MULTI_CELL_WIDTH, pdf.font_size * 1.8, txt="Task:", ln=0, align="L")
+    pdf.set_xy(MARK_X, pdf.get_y())
     pdf.cell(20, pdf.font_size * 1.8, txt="Mark:", ln=0, align="L")
+    pdf.set_xy(DATE_X, pdf.get_y())
     pdf.cell(0, pdf.font_size * 1.8, txt="Date:", ln=1, align="L")
-    # Добавляю пояснения к таблице
-    
+
     pdf.set_draw_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
     pdf.set_line_width(0.5)
     pdf.line(SUBJECT_OFFSET - 1, pdf.get_y(), pdf.w - SUBJECT_OFFSET + 1, pdf.get_y())
     # Рисую жирную линию
-    
     pdf.set_xy(SUBJECT_OFFSET, pdf.get_y() + pdf.font_size * 0.5)
-    # Выставляю курсор на отступ для названия таска
-    for pnum in range(1, comment_number):
 
-        com_dict = comments[pnum]
+
+def get_comment_height(pdf, comment):
+    text_size = 0
+    font_family = pdf.font_family
+    font_size = pdf.font_size
+
+    pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1])
+    for line in comment['description'].split('\n'):
+        width = 0
+        for word in line.split(' '):
+            text_size += pdf.font_size * 1.1
+            if width + pdf.get_string_width(" " + word) > COMMENT_MULTI_CELL_WIDTH:
+                text_size += pdf.font_size * 1.1
+                width = pdf.get_string_width(word)
+            else:
+                width += pdf.get_string_width(" " + word)
+
+    pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1] - 2)
+    for line in comment['comment_text'].split('\n'):
+        text_size += pdf.font_size * 1.1
+        width = 0
+        for word in line.split(' '):
+            if width + pdf.get_string_width(" " + word) > COMMENT_MULTI_CELL_WIDTH:
+                text_size += pdf.font_size * 1.1
+                width = pdf.get_string_width(word)
+            else:
+                width += pdf.get_string_width(" " + word)
+
+    pdf.set_font(font_family, size=font_size)
+    return text_size
+
+
+def check_end_of_page(pdf, comment):
+    text_size = get_comment_height(pdf, comment)
+    return (pdf.h - text_size - pdf.get_y()) <= PAGE_FOOTER_SIZE
+
+
+def create_comments_data(pdf, comments):
+
+    subject = ""  # Создаю переменную для проверки названия предмета
+
+    for comment in comments:
+        link = comment['link']
         # Беру по очереди значения в словаре от 1 до последнего
 
-        if sub_check != com_dict[0]:
+        if subject != comment['subject']:
             # Если название предмета поменялось, рисую новый заголовок предмета, на новой странице
+            # pdf.add_page()
+            subject = comment['subject']
+            draw_subject_comments_title(pdf, subject, comment)
+
+        if check_end_of_page(pdf, comment):
             pdf.add_page()
-            sub_check = com_dict[0]
-            pdf.set_font(INFO_FONT[0], size=INFO_FONT[1])
-            pdf.cell(0, pdf.font_size * 1.8, txt="", ln=1, align="L")
-            pdf.cell(0, pdf.font_size * 1.8, txt=sub_check, ln=1, align="C")
-            pdf.set_line_width(0.5)
-            pdf.set_font(INFO_FONT[0], size = 10)
-            pdf.cell(14, 0, txt="", ln=0, align="L")
-            pdf.cell(118, pdf.font_size * 1.8, txt="Task:", ln=0, align="L")
-            pdf.cell(20, pdf.font_size * 1.8, txt="Mark:", ln=0, align="L")
-            pdf.cell(0, pdf.font_size * 1.8, txt="Date:", ln=1, align="L")
-            pdf.line(SUBJECT_OFFSET - 1, pdf.get_y()-0.5, pdf.w - SUBJECT_OFFSET + 1, pdf.get_y()-0.5)
-            pdf.cell(14, 0, txt="", ln=0, align="L")
-        
+            draw_comments_hat(pdf)
+
         pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1])
-        
         pdf.set_text_color(BLUE_COLOR[0], BLUE_COLOR[1], BLUE_COLOR[2])
         
         STRING_Y = pdf.get_y()
         # Сохраняю высоту строки, на которой написано название таска
         
-        pdf.multi_cell(108, pdf.font_size * 1.1, com_dict[3], align="L")
+        pdf.multi_cell(COMMENT_MULTI_CELL_WIDTH, pdf.font_size * 1.1, comment['description'], align="L")
         # Пишу название таска
 
-        pdf.set_link(pnum, y=pdf.get_y(), page=-1)
+        pdf.set_link(link, y=pdf.get_y(), page=-1)
         # Задаю пункт назначения ссылки
 
         pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1] - 2)
         pdf.set_text_color(0, 0, 0)
         
         pdf.cell(14, 0, txt="", ln=0, align="L")
-        pdf.multi_cell(116, pdf.font_size * 1.1, com_dict[4], align="L")
+        pdf.multi_cell(COMMENT_MULTI_CELL_WIDTH, pdf.font_size * 1.1, comment['comment_text'], align="L")
         # Пишу комментарий
 
         END_CORD_Y = pdf.get_y()
@@ -538,16 +614,20 @@ def create_comments_data(pdf, comment_number, comments):
         pdf.set_xy(MARK_X, STRING_Y + 1)
         # Перевожу курсор в правую часть документа по статичному x для оценки и недавно сохранённому y
 
-        pdf.cell(0, pdf.font_size * 1.1, com_dict[2], ln=0, align="L")
-        # Пишу оценку
+        for criteria in comment['mark'].keys():
+            text = criteria + ": " + comment['mark'][criteria]
+            pdf.cell(0, pdf.font_size * 1.1, text, ln=2, align="L")
+            # Пишу оценку
+
+        END_CORD_Y = max(END_CORD_Y, pdf.get_y())
 
         pdf.set_xy(DATE_X, STRING_Y+1)
         # Перевожу курсор в правую часть документа по статичному x для даты и недавно сохранённому y
         # (без этого по какой-то причине иногда ломается)
         
-        pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1] - 1)
+        # pdf.set_font(TABLE_TEXT_FONT[0], size=TABLE_TEXT_FONT[1] - 1)
         
-        pdf.cell(0, pdf.font_size * 1.1, com_dict[1], ln=0, align="L")
+        pdf.cell(0, pdf.font_size * 1.1, comment['timestamp'], ln=0, align="L")
         # Пишу дату
 
         pdf.set_line_width(0.3)
@@ -682,6 +762,8 @@ class ReportApi(Resource):
 
             pdf.set_xy(pdf.get_y(), pdf.h - 1)
 
+            comments = []
+
             # Пишем оценки по каждому предмету
             for subject in subjects_list:
                 if subject not in my_subjects:
@@ -702,20 +784,21 @@ class ReportApi(Resource):
                 if len(marks) == 0:
                     continue
 
+                link_by_task = prepare_comments(pdf, comments, marks, subject_obj['name'])
+
                 # Собираем таблицу с оценками
                 table = generate_table(marks)
 
                 # Рисуем эту таблицу и обновляем значение offset (см. документацию к draw_table)
                 draw_table(pdf, table,
                            partial(page_hat, pdf, student, date_from, date_to, creator_name, subject_obj),
-                           subject_obj)
+                           subject_obj, link_by_task=link_by_task)
 
-                # Рисуем заголовок комментариев
-                create_comments_title(pdf)
+            # Рисуем заголовок комментариев
+            create_comments_title(pdf)
 
-                # Рисуем комментарии
-                create_comments_data(pdf, comment_number, comments)
-
+            # Рисуем комментарии
+            create_comments_data(pdf, comments)
             # Сохраняем в файл
             pdf.output(os.path.join("reports", filename))
 

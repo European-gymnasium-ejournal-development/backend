@@ -25,9 +25,6 @@ class TeachersApi(Resource):
                 'name': name
             }
         else:
-            print('error with token!')
-            print(args['access_token'])
-            print(status[1])
             return {
                 'result': 'Error!',
                 'error_message': status[1]

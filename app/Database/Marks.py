@@ -63,6 +63,9 @@ class Mark(db.Model):
 # комментарий к оценке - comment
 # Если оценка с такими параметрами уже существовала, то обновляем данные
 def add_mark(task_id, student_id, criteria, mark, max_mark, comment):
+    if not comment:
+        comment = ""
+
     try:
         criteria = criteria_to_id(criteria)
     except AttributeError:
