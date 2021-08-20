@@ -31,14 +31,12 @@ def export_excel(grade_name):
 
 @app.route('/export/<type>/<id>/<date_from>/<date_to>')
 def export(type, id, date_from, date_to):
-    print(type, id, date_from, date_to)
+    # print(type, id, date_from, date_to)
     return serve_index()
 
 
 @app.route('/download_report/<key>')
 def download_report(key):
-    print("download_report")
-
     # Проверяем валидность ключа
     filename = Report.check_key(key)
     # Если валиден, то возвращаем файл пользователю

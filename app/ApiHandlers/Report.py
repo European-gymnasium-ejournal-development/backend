@@ -654,10 +654,10 @@ class ReportApi(Resource):
         # Пробуем распарсить запрос
         try:
             args = parser.parse_args()
-            print(args)
+            # print(args)
         except Exception as e:
             # Если что-то не так, то возвращаем ошибку
-            print(e)
+            # print(e)
             return {
                 "result": "Error!",
                 "error_message": str(e)
@@ -671,7 +671,7 @@ class ReportApi(Resource):
                 # Иначе нам его передали в hex формате, чтобы не было кринж-символов
                 args['comment'] = jshex_to_str(args['comment'])
             except Exception as e:
-                print(e)
+                # print(e)
                 return {
                     'result': 'Error!',
                     'error_message': str(e)

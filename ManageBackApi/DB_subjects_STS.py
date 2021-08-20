@@ -76,7 +76,7 @@ def update_subjects_tasks_marks():
                 for student_of_task in students_of_task['students']:
                     # print(student_of_task)
                     student_id = student_of_task['id']
-                    print(student_of_task)
+                    # print(student_of_task)
 
                     # Ищем критерий оценки в информации об ученике
                     if any(x == 'criteria' for x in student_of_task['assessments']):

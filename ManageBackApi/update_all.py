@@ -14,7 +14,7 @@ def update_all(update_period):
     import app.Database
 
     while True:
-        print(update_period)
+        # print(update_period)
         print('started updating all')
         update_students()
         update_teachers()

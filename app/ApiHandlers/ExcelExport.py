@@ -1,103 +1,91 @@
 import datetime
-import xlsxwriter
+import os
 
+import xlsxwriter
+from copy import deepcopy
 from flask_restful import Resource, reqparse
 from app.ApiHandlers.JWTVerification import check_access_token
 from app.ApiHandlers.Report import check_key, gen_key
 from app.Database import Students, Marks
 
 
+# Создание таблицы Summative
+def table_sum(workbook, marks):
+    table_with_filter(workbook, marks, lambda x: x['type'] == 'summative', 'Summative')
+
+
+# Создание таблицы Formative
+def table_form(workbook, marks):
+    table_with_filter(workbook, marks, lambda x: x['type'] == 'formative', 'Formative')
+
+
+# Создание таблицы Mixed
+def table_mix(workbook, marks):
+    table_with_filter(workbook, marks, lambda x: True, 'Mixed')
+
+
+def table_with_filter(workbook, marks, filter, table_name):
+    worksheet = workbook.add_worksheet(table_name)
+    # Создаю лист с таблицей
+
+    line_index = {'A': {'page': 1, 'line': 0}, 'B': {'page': 1, 'line': 1}, 'C': {'page': 1, 'line': 2},
+                  'D': {'page': 1, 'line': 3}, '0': {'page': 1, 'line': 4}}
+
+    cell_index = 1
+    # Параметры для записи оценок
+
+    worksheet.write(line_index['A']['line'], 0, "A")
+    worksheet.write(line_index['B']['line'], 0, "B")
+    worksheet.write(line_index['C']['line'], 0, "C")
+    worksheet.write(line_index['D']['line'], 0, "D")
+    worksheet.write(line_index['0']['line'], 0, "No criteria")
+    # Рисую критерии
+
+    for mark in marks:
+        if filter(mark):
+            for criteria in mark['mark'].keys():
+                # Проверяю тип оценки
+                try:
+                    worksheet.write_number(line_index[criteria]['line'], cell_index, int(mark['mark'][criteria]))
+                except:
+                    worksheet.write(line_index[criteria]['line'], cell_index, mark['mark'][criteria])
+                # Записываю оценку
+
+            cell_index += 1
+            # line_index[mark['criteria']]['page'] += 1
+            # Меняю ячейку для следующей записи
+
+
 def generate_excel(marks, filename):
-    
-    workbook = xlsxwriter.Workbook(filename + ".xlsx")
-    #Создаю файл xlsx
-    
-    #Создание таблицы Summative
-    def table_sum(marks):
-        worksheet_sum = workbook.add_worksheet('Summative')
-        #Создаю лист с таблицей
+    marks_dict = {}
+    for mark in marks:
+        if mark['max_mark'] != '8':
+            continue
 
-        line_index = {'A': {'page' : 1, 'line' : 0}, 'B': {'page' : 1, 'line' : 1}, 'C': {'page' : 1, 'line' : 2}, 'D': {'page' : 1, 'line' : 3}, '0': {'page' : 1, 'line' : 4}}
-        #Параметры для записи оценок
+        key = mark['timestamp'] + ":" + str(mark['student_id']) + ":" + str(mark['task_id'])
+        if key in marks_dict.keys():
+            marks_dict[key]['mark'][mark['criteria']] = mark['mark']
+        else:
+            mark_edited = deepcopy(mark)
+            mark_edited['mark'] = {mark['criteria']: mark['mark']}
+            marks_dict[key] = mark_edited
 
-        worksheet_sum.write(line_index['A']['line'],0,"A")
-        worksheet_sum.write(line_index['B']['line'],0,"B")
-        worksheet_sum.write(line_index['C']['line'],0,"C")
-        worksheet_sum.write(line_index['D']['line'],0,"D")
-        worksheet_sum.write(line_index['0']['line'],0,"None")
-        #Рисую критерии
+    marks_list = []
+    for key in marks_dict.keys():
+        marks_list.append(marks_dict[key])
 
-        for mark in marks:
+    path = os.path.join("reports", filename)
+    if os.path.exists(path):
+        os.remove(path)
+    workbook = xlsxwriter.Workbook(path)
+    # Создаю файл xlsx
 
-            if mark['type'] == 'summative':
-            #Проверяю тип оценки
-                
-                worksheet_sum.write_number(line_index[mark['criteria']]['line'],line_index[mark['criteria']]['page'],int(mark['mark']))
-                #Записываю оценку
-
-                line_index[mark['criteria']]['page'] += 1
-                #Меняю ячейку для следующей записи
-
-
-    #Создание таблицы Formative
-    def table_form(marks):
-        worksheet_form = workbook.add_worksheet('Formative')
-        #Создаю лист с таблицей
-
-        line_index = {'A': {'page' : 1, 'line' : 0}, 'B': {'page' : 1, 'line' : 1}, 'C': {'page' : 1, 'line' : 2}, 'D': {'page' : 1, 'line' : 3}, '0': {'page' : 1, 'line' : 4}}
-        #Параметры для записи оценок
-
-
-        worksheet_form.write(line_index['A']['line'],0,"A")
-        worksheet_form.write(line_index['B']['line'],0,"B")
-        worksheet_form.write(line_index['C']['line'],0,"C")
-        worksheet_form.write(line_index['D']['line'],0,"D")
-        worksheet_form.write(line_index['0']['line'],0,"None")
-        #Рисую критерии
-
-        for mark in marks:
-
-            if mark['type'] == 'formative':
-            #Проверяю тип оценки
-                worksheet_form.write_number(line_index[mark['criteria']]['line'],line_index[mark['criteria']]['page'],int(mark['mark']))
-                #Записываю оценку
-
-                line_index[mark['criteria']]['page'] += 1
-                #Меняю ячейку для следующей записи
-
-    #Создание таблицы Mixed
-    def table_mix(marks):
-        worksheet_mix = workbook.add_worksheet('Mixed')
-        #Создаю лист с таблицей
-
-        line_index = {'A': {'page' : 1, 'line' : 0}, 'B': {'page' : 1, 'line' : 1}, 'C': {'page' : 1, 'line' : 2}, 'D': {'page' : 1, 'line' : 3}, '0': {'page' : 1, 'line' : 4}}
-        #Параметры для записи оценок
-
-
-        worksheet_mix.write(line_index['A']['line'],0,"A")
-        worksheet_mix.write(line_index['B']['line'],0,"B")
-        worksheet_mix.write(line_index['C']['line'],0,"C")
-        worksheet_mix.write(line_index['D']['line'],0,"D")
-        worksheet_mix.write(line_index['0']['line'],0,"None")
-        #Рисую критерии
-
-        for mark in marks:
-            worksheet_mix.write_number(line_index[mark['criteria']]['line'],line_index[mark['criteria']]['page'],int(mark['mark']))
-            #Записываю оценку
-
-            line_index[mark['criteria']]['page'] += 1
-            #Меняю ячейку для следующей записи
-
-
-    
-    table_sum(marks)
-    table_form(marks)
-    table_mix(marks)
+    table_sum(workbook, marks_list)
+    table_form(workbook, marks_list)
+    table_mix(workbook, marks_list)
     workbook.close()
     
 
-
-# Получение всех классов, которые есть в системе
 class ExcelExport(Resource):
     def get(self):
         parser = reqparse.RequestParser()
@@ -135,8 +123,10 @@ class ExcelExport(Resource):
         if status[0]:
             students = Students.get_all_students_of_grade(args['grade'])
             for student in students:
+                # print(args['date_from'], args['date_to'], student['id'], args['subject'])
                 all_marks += Marks.get_marks(args['date_from'], args['date_to'], student['id'], args['subject'])
 
+            # print(all_marks)
             all_marks.sort(key=lambda x: x['timestamp'])
             filename = datetime.datetime.now().strftime("%Y-%d-%m") + "-" + args['subject'] + '-' \
                        + args['grade'] + ".xlsx"

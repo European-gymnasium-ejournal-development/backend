@@ -19,3 +19,4 @@ googletrans2
 mysql
 mysqlclient
 oauth2client
+XlsxWriter~=3.0.1
