@@ -32,7 +32,7 @@ def parse_token(token):
 # Иначе возвращает две пустые строки
 def login(google_token):
     parsed = parse_token(google_token)
-    Logs.add_log("-", datetime.datetime.now(), "-", "Parsed token data: " + str(parsed))
+    # Logs.add_log("-", datetime.datetime.now(), "-", "Parsed token data: " + str(parsed))
     if parsed[0]:
         return JWRefreshTokens.update_refresh_token(parsed[1])
     else:
