@@ -24,14 +24,15 @@ class Login(Resource):
 
         args = parser.parse_args()
 
-        Logs.add_log(str(reqparse.request.remote_addr), datetime.datetime.now(), "-", "Google token: " + str(args['google_token']))
+        # Logs.add_log(str(reqparse.request.remote_addr), datetime.datetime.now(), "-",
+        # "Google token: " + str(args['google_token']))
 
         # С помощью гугла проверяем, хороший ли токен гугла
         # Эта же функция в случае успеха создает нам токены доступа к нашему сайту
         result = verification.login(args['google_token'])
 
-        Logs.add_log(str(reqparse.request.remote_addr), datetime.datetime.now(), "-",
-                     "Verification result: " + str(result))
+        # Logs.add_log(str(reqparse.request.remote_addr), datetime.datetime.now(), "-",
+        #            "Verification result: " + str(result))
 
         # Если токен пустой, значит что-то не так(
         if len(result[0]) == 0:
