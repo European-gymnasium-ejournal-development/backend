@@ -1,4 +1,5 @@
 import sys
+import datetime
 
 
 # Основные константы проекта
@@ -16,6 +17,7 @@ class Metadata:
     MINIMUM_UPDATE_PERIOD = 2 * 3600
     REPORT_TABLE_WIDTH = 8
     TABLES_PER_PAGE = 4
+    LAST_UPDATE = datetime.datetime.now()
 
 
 # Ошибка, которую может выбросить функция

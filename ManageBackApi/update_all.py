@@ -6,6 +6,7 @@ from ManageBackApi.DB_teachers import update_teachers
 from ManageBackApi.DB_students import update_students
 
 import time
+import datetime
 import multiprocessing
 import threading
 
@@ -14,6 +15,7 @@ def update_all(update_period):
     import app.Database
 
     while True:
+        start_update_time = datetime.datetime.now()
         # print(update_period)
         print('started updating all')
         update_students()
@@ -21,6 +23,7 @@ def update_all(update_period):
         update_subjects_tasks_marks()
         print('everything is up to date')
         print('next update is in {} hours'.format(update_period // 3600))
+        Metadata.LAST_UPDATE = start_update_time
         time.sleep(update_period)
 
 

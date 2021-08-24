@@ -6,7 +6,7 @@ from app.ApiHandlers import JWTVerification
 from app import app, api
 from flask import send_from_directory, redirect
 from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers, \
-    Report, ExcelExport
+    Report, ExcelExport, LastUpdate
 
 
 @app.route('/')
@@ -14,28 +14,28 @@ def serve_index():
     return send_from_directory(app.static_folder, 'index.html')
 
 
-@app.route('/main')
+@app.route('/main/')
 def main():
     return serve_index()
 
 
-@app.route('/admin')
+@app.route('/admin/')
 def admin():
     return serve_index()
 
 
-@app.route('/excel_export/<grade_name>')
-def export_excel(grade_name):
-    return serve_index()
+# @app.route('/excel_export/<grade_name>')
+# def export_excel(grade_name):
+#     return serve_index()
+#
+#
+# @app.route('/export/<type>/<id>/<date_from>/<date_to>')
+# def export(type, id, date_from, date_to):
+#     # print(type, id, date_from, date_to)
+#     return serve_index()
 
 
-@app.route('/export/<type>/<id>/<date_from>/<date_to>')
-def export(type, id, date_from, date_to):
-    # print(type, id, date_from, date_to)
-    return serve_index()
-
-
-@app.route('/download_report/<key>')
+@app.route('/download_report/<key>/')
 def download_report(key):
     # Проверяем валидность ключа
     filename = Report.check_key(key)
@@ -52,7 +52,7 @@ def download_report(key):
         return redirect('/main')
 
 
-@app.route('/download_logs/<date_from>/<date_to>/<key>')
+@app.route('/download_logs/<date_from>/<date_to>/<key>/')
 def download_logs(date_from, date_to, key):
     # декодируем ключ доступа к файлу логов
     key = codecs.decode(key, "hex").decode('utf-8')
@@ -93,6 +93,16 @@ def download_logs(date_from, date_to, key):
     return send_from_directory(abspath, 'prepared.log', as_attachment=True)
 
 
+@app.errorhandler(404)
+def not_found(e):
+    return send_from_directory(app.static_folder, '404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(e):
+    return send_from_directory(app.static_folder, '500.html'), 500
+
+
 # добавляем ресурсы API-шников
 api.add_resource(HelloHandler.HelloHandler, '/api/hello')
 api.add_resource(Login.Login, '/api/login')
@@ -112,3 +122,5 @@ api.add_resource(Login.Logout, '/api/logout')
 api.add_resource(Report.ReportApi, '/api/report')
 api.add_resource(Students.GetStudentApi, '/api/get_student')
 api.add_resource(ExcelExport.ExcelExport, '/api/excel_export')
+api.add_resource(LastUpdate.LastUpdateApi, '/api/last_update')
+api.add_resource(ExcelExport.ExcelExportStudent, '/api/excel_export_student')
