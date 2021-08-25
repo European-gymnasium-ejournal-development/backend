@@ -10,30 +10,41 @@ from app.Database import Students, Marks, Subjects
 
 
 # Создание таблицы Summative
-def table_sum(workbook, marks):
-    table_with_filter(workbook, marks, lambda x: x['type'] == 'summative', 'Summative')
+def table_sum(workbook, marks, info):
+    table_with_filter(workbook, marks, lambda x: x['type'] == 'summative', 'Summative', info)
 
 
 # Создание таблицы Formative
-def table_form(workbook, marks):
-    table_with_filter(workbook, marks, lambda x: x['type'] == 'formative', 'Formative')
+def table_form(workbook, marks, info):
+    table_with_filter(workbook, marks, lambda x: x['type'] == 'formative', 'Formative', info)
 
 
 # Создание таблицы Mixed
-def table_mix(workbook, marks):
-    table_with_filter(workbook, marks, lambda x: True, 'Mixed')
+def table_mix(workbook, marks, info):
+    table_with_filter(workbook, marks, lambda x: True, 'Mixed', info)
 
 
-def table_with_filter(workbook, marks, filter, table_name):
+def write_info(worksheet, info) -> int:
+    worksheet.write(0, 0, info['subject'])
+    worksheet.write(0, 3, info['date_from'])
+    worksheet.write(0, 4, info['date_to'])
+    worksheet.write(1, 0, info['name'])
+    # return offset after this info
+    return 3
+
+
+def table_with_filter(workbook, marks, filter, table_name, info):
     worksheet = workbook.add_worksheet(table_name)
     # Создаю лист с таблицей
 
-    line_index = {'A': {'page': 1, 'line': 0}, 'B': {'page': 1, 'line': 1}, 'C': {'page': 1, 'line': 2},
-                  'D': {'page': 1, 'line': 3}, '0': {'page': 1, 'line': 4}}
+    offset = write_info(worksheet, info)
+
+    line_index = {'A': {'page': 1, 'line': offset}, 'B': {'page': 1, 'line': offset + 1}, 'C': {'page': 1, 'line': offset + 2},
+                  'D': {'page': 1, 'line': offset + 3}, '0': {'page': 1, 'line': offset + 4}}
 
     cell_index = 1
-    # Параметры для записи оценок
 
+    # Параметры для записи оценок
     worksheet.write(line_index['A']['line'], 0, "A")
     worksheet.write(line_index['B']['line'], 0, "B")
     worksheet.write(line_index['C']['line'], 0, "C")
@@ -56,7 +67,7 @@ def table_with_filter(workbook, marks, filter, table_name):
             # Меняю ячейку для следующей записи
 
 
-def generate_excel(marks, filename):
+def generate_excel(marks, filename, info):
     marks_dict = {}
     for mark in marks:
         if mark['max_mark'] != '8':
@@ -80,9 +91,9 @@ def generate_excel(marks, filename):
     workbook = xlsxwriter.Workbook(path)
     # Создаю файл xlsx
 
-    table_sum(workbook, marks_list)
-    table_form(workbook, marks_list)
-    table_mix(workbook, marks_list)
+    table_sum(workbook, marks_list, info)
+    table_form(workbook, marks_list, info)
+    table_mix(workbook, marks_list, info)
     workbook.close()
     
 
@@ -134,7 +145,14 @@ class ExcelExport(Resource):
             filename = datetime.datetime.now().strftime("%Y-%d-%m") + "-" + subject['name'] + '-' \
                        + args['grade'] + ".xlsx"
 
-            generate_excel(all_marks, filename)
+            info = {
+                'name': args['grade'],
+                'date_from': args['date_from'],
+                'date_to': args['date_to'],
+                'subject': subject['name']
+            }
+
+            generate_excel(all_marks, filename, info)
             key = gen_key(filename)
 
             return {
@@ -194,7 +212,14 @@ class ExcelExportStudent(Resource):
             filename = datetime.datetime.now().strftime("%Y-%d-%m") + "-" + subject['name'] + '-' \
                        + student['name'] + ".xlsx"
 
-            generate_excel(all_marks, filename)
+            info = {
+                'name': student['name'],
+                'date_from': args['date_from'],
+                'date_to': args['date_to'],
+                'subject': subject['name']
+            }
+
+            generate_excel(all_marks, filename, info)
             key = gen_key(filename)
 
             return {
