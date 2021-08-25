@@ -5,7 +5,7 @@ from flask_restful import reqparse
 from app.ApiHandlers import JWTVerification
 from app import app, api
 from flask import send_from_directory, redirect
-from app.ApiHandlers import HelloHandler, Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers, \
+from app.ApiHandlers import Login, RefreshToken, Grades, Logs, Marks, Students, Subjects, Admin, Teachers, \
     Report, ExcelExport, LastUpdate
 
 
@@ -104,7 +104,6 @@ def internal_error(e):
 
 
 # добавляем ресурсы API-шников
-api.add_resource(HelloHandler.HelloHandler, '/api/hello')
 api.add_resource(Login.Login, '/api/login')
 api.add_resource(RefreshToken.RefreshToken, '/api/refresh_token')
 api.add_resource(Grades.GradesApi, '/api/grades')
