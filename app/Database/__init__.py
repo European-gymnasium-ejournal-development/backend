@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, event
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, event, Boolean
 from sqlalchemy.orm import scoped_session, sessionmaker, backref, relation
 from sqlalchemy.ext.declarative import declarative_base
 from create.config import Metadata

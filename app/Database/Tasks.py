@@ -1,4 +1,4 @@
-from app.Database import db, Integer, Column, String, ForeignKey, DateTime
+from app.Database import db, Integer, Column, String, ForeignKey, DateTime, Boolean
 from datetime import datetime
 from datetime import timedelta
 
@@ -24,6 +24,7 @@ class Task(db.Model):
     subject_id = Column('subject_id', ForeignKey('subjects.id'))
     description = Column('description', String(16000))
     timestamp = Column('timestamp', DateTime)
+    is_updated = Column('is_updated', Boolean)
 
     def __init__(self, id, task_type, subject_id, description, timestamp):
         self.id = id
@@ -31,6 +32,7 @@ class Task(db.Model):
         self.description = description
         self.subject_id = subject_id
         self.timestamp = timestamp
+        self.is_updated = True
 
     def to_json(self):
         return {
@@ -73,6 +75,7 @@ def add_task(id, task_type, subject_id, description, time_string):
         existing_task.update(dict(task_type=task_type,
                                   subject_id=subject_id,
                                   description=description,
-                                  timestamp=timestamp))
+                                  timestamp=timestamp,
+                                  is_updated=True))
 
     db.session.commit()

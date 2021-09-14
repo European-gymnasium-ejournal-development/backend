@@ -1,17 +1,19 @@
 from sqlalchemy.orm import load_only
 from app.Database.Students import Student
 from app.Database.Teachers import Teacher
-from app.Database import db, Column, Integer, String, ForeignKey
+from app.Database import db, Column, Integer, String, ForeignKey, Boolean
 
 
 class Subject(db.Model):
     __tablename__ = 'subjects'
     id = Column('id', Integer, primary_key=True, unique=True)
     name = Column('name', String(512), unique=False)
+    is_updated = Column('is_updated', Boolean)
 
     def __init__(self, id, name):
         self.id = id
         self.name = name
+        self.is_updated = True
 
     def to_json(self):
         return {
@@ -25,10 +27,12 @@ class SubjectToStudentMapping(db.Model):
     id = Column('id', Integer, primary_key=True, autoincrement=True)
     subject_id = Column('subject_id', ForeignKey('subjects.id'))
     student_id = Column('student_id', ForeignKey('students.id'))
+    is_updated = Column('is_updated', Boolean)
 
     def __init__(self, subject_id, student_id):
         self.subject_id = subject_id
         self.student_id = student_id
+        self.is_updated = True
 
     def to_json(self):
         return {
@@ -43,10 +47,12 @@ class SubjectsToTeachersMapping(db.Model):
     id = Column('id', Integer, autoincrement=True, primary_key=True, unique=True)
     subject_id = Column('subject_id', ForeignKey("subjects.id"))
     teacher_id = Column('teacher_id',  ForeignKey("teachers.id"))
+    is_updated = Column('is_updated', Boolean)
 
     def __init__(self, subject_id, teacher_id):
         self.subject_id = subject_id
         self.teacher_id = teacher_id
+        self.is_updated = True
 
     def to_json(self):
         return {
@@ -70,7 +76,7 @@ def add_subject(id, subject_name, students_ids, teachers):
         db.session.add(new_subject)
     else:
         # Иначе обновляем значение записи
-        existing_subject.update(dict(name=subject_name))
+        existing_subject.update(dict(name=subject_name, is_updated=True))
 
     db.session.commit()
 

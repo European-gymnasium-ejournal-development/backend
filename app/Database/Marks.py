@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.Database import db, Integer, String, ForeignKey, Column, DateTime, Tasks, Students
+from app.Database import db, Integer, String, ForeignKey, Column, DateTime, Tasks, Students, Boolean
 from create.config import error
 # criteria: 1 - A, 2 - B, 3 - C, 4 - D, 0 - No criteria
 
@@ -31,6 +31,7 @@ class Mark(db.Model):
     mark = Column('mark', String(16))
     max_mark = Column('max_mark', String(16))
     comment = Column('comment', String(16000))
+    is_updated = Column('is_updated', Boolean)
 
     def __init__(self, student_id, criteria, task_id, mark, max_mark, comment):
         self.student_id = student_id
@@ -38,6 +39,7 @@ class Mark(db.Model):
         self.max_mark = str(max_mark)
         self.mark = str(mark)
         self.comment = str(comment)
+        self.is_updated = True
 
         if isinstance(criteria, int):
             if 0 <= criteria <= 4:
@@ -65,7 +67,6 @@ class Mark(db.Model):
 def add_mark(task_id, student_id, criteria, mark, max_mark, comment):
     if not comment:
         comment = ""
-
     try:
         criteria = criteria_to_id(criteria)
     except AttributeError:
@@ -85,7 +86,7 @@ def add_mark(task_id, student_id, criteria, mark, max_mark, comment):
         db.session.add(new_mark)
     else:
         # Иначе обновляем значение оценки
-        existing_mark.update(dict(mark=str(mark), max_mark=str(max_mark), comment=str(comment)))
+        existing_mark.update(dict(mark=str(mark), max_mark=str(max_mark), comment=str(comment), is_updated=True))
 
     db.session.commit()
 

@@ -154,7 +154,7 @@ class ResetUpdateTimeApi(Resource):
 
         # Перезапускаем обновление БД с новыми параметрами
         if new_update_time >= Metadata.MINIMUM_UPDATE_PERIOD:
-            print('restarting\n\n\n\n')
+            print('restarting database update\n\n\n\n')
             Metadata.UPDATE_DATABASE_PERIOD = new_update_time
             update_all.restart()
 

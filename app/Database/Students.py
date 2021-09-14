@@ -1,4 +1,4 @@
-from app.Database import db, Column, Integer, String
+from app.Database import db, Column, Integer, String, Boolean
 from sqlalchemy import literal
 
 
@@ -7,11 +7,13 @@ class Student(db.Model):
     id = Column('id', Integer, primary_key=True, unique=True)
     name = Column('name', String(60))
     grade_name = Column('grade_name', String(60))
+    is_updated = Column('is_updated', Boolean)
 
     def __init__(self, id, name, grade_name):
         self.id = id
         self.name = name
         self.grade_name = grade_name
+        self.is_updated = True
 
     def to_json(self):
         return {
@@ -33,7 +35,7 @@ def add_student(id, name, grade):
         db.session.add(new_user)
     else:
         # иначе обновляем информацию
-        existing_user.update(dict(name=name, grade_name=grade))
+        existing_user.update(dict(name=name, grade_name=grade, is_updated=True))
 
     db.session.commit()
 

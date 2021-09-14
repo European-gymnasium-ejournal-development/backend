@@ -3,14 +3,14 @@ create.config.upload_keys()
 
 import app
 from cheroot.wsgi import Server, PathInfoDispatcher
-
+from app.ApiHandlers.Admin import update_all
 d = PathInfoDispatcher({'/': app.app})
-server = Server(('127.0.0.1', 5000), d, numthreads=1000)
+server = Server(('0.0.0.0', 5000), d, numthreads=1000)
 
 
 if __name__ == '__main__':
     try:
-        from app.ApiHandlers.Admin import update_all
+
         update_all.restart()
         server.start()
 

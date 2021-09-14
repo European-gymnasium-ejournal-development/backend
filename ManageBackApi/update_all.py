@@ -7,14 +7,18 @@ from ManageBackApi.DB_students import update_students
 
 import time
 import datetime
-import multiprocessing
 import threading
+import app.Database
+import app.Database.Preparation
+
+should_restart = False
 
 
 def update_all(update_period):
-    import app.Database
-
     while True:
+        if should_restart:
+            return
+        app.Database.Preparation.prepare_for_update()
         start_update_time = datetime.datetime.now()
         # print(update_period)
         print('started updating all')
@@ -24,6 +28,8 @@ def update_all(update_period):
         print('everything is up to date')
         print('next update is in {} hours'.format(update_period // 3600))
         Metadata.LAST_UPDATE = start_update_time
+
+        app.Database.Preparation.remove_not_updated()
         time.sleep(update_period)
 
 
@@ -31,10 +37,10 @@ update_process = None
 
 
 def restart():
-    global update_process
+    global update_process, should_restart
+    should_restart = True
     if update_process is not None:
-        update_process.terminate()
         update_process.join()
-        update_process.close()
-    update_process = multiprocessing.Process(name="update", target=update_all, args={Metadata.UPDATE_DATABASE_PERIOD})
+    should_restart = False
+    update_process = threading.Thread(name="update", target=update_all, args=(Metadata.UPDATE_DATABASE_PERIOD,))
     update_process.start()

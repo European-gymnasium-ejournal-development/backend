@@ -24,7 +24,6 @@ def update_subjects_tasks_marks():
         page += 1
         # Итерируемся по предметам
         for subject_index, subject in enumerate(subjects['classes']):
-            print(subject)
             # print(str(subject_index + 1) + " of " + str(len(subjects['classes'])))
             # print(subject)
             subject_id = subject['id']

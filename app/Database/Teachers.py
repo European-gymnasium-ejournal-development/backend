@@ -1,4 +1,4 @@
-from app.Database import db, Column, Integer, String
+from app.Database import db, Column, Integer, String, Boolean
 import sys
 from enum import Enum
 
@@ -16,11 +16,13 @@ class Teacher(db.Model):
     name = Column('name', String(60))
     email = Column('email', String(60), unique=True)
     access_level = Column('access_level', Integer)
+    is_updated = Column('is_updated', Boolean)
 
     def __init__(self, id, name, email, access_level):
         self.name = name
         self.id = id
         self.email = email
+        self.is_updated = True
         if isinstance(access_level, int):
             if 0 <= access_level <= 3:
                 self.access_level = access_level
@@ -43,7 +45,7 @@ class Teacher(db.Model):
 def update_teachers_rights(email, access_level):
     existing_teacher = Teacher.query.filter_by(email=email)
     if existing_teacher.first() is not None:
-        existing_teacher.update(dict(access_level=access_level))
+        existing_teacher.update(dict(access_level=access_level, is_updated=True))
         db.session.commit()
 
 
@@ -60,7 +62,7 @@ def add_teacher(id, name, email, access_level):
         db.session.add(new_teacher)
     else:
         # Иначе обновляем значение записи
-        existing_teacher.update(dict(name=name, email=email))
+        existing_teacher.update(dict(name=name, email=email, is_updated=True))
 
     db.session.commit()
 
