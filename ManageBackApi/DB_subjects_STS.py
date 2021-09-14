@@ -17,7 +17,7 @@ def update_subjects_tasks_marks():
         # Получаем информацию о предметах
         url_subjects = Metadata.MANAGEBAC_URL + 'classes'
         headers_subjects = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-        payload_subjects = {'page': page, 'per_page': '1000', 'archived': '(0)'}
+        payload_subjects = {'page': page, 'per_page': '1000'}
         response_subjects = requests.get(url_subjects, headers=headers_subjects, params=payload_subjects)
         subjects = json.loads(response_subjects.text)
         page += 1
