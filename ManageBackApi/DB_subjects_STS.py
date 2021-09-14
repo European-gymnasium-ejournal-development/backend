@@ -20,9 +20,11 @@ def update_subjects_tasks_marks():
         payload_subjects = {'page': page, 'per_page': '1000'}
         response_subjects = requests.get(url_subjects, headers=headers_subjects, params=payload_subjects)
         subjects = json.loads(response_subjects.text)
+        # print(subjects)
         page += 1
         # Итерируемся по предметам
         for subject_index, subject in enumerate(subjects['classes']):
+            print(subject)
             # print(str(subject_index + 1) + " of " + str(len(subjects['classes'])))
             # print(subject)
             subject_id = subject['id']
@@ -36,20 +38,21 @@ def update_subjects_tasks_marks():
             # Получаем информацию об учениках, посещающих этот предмет
             url_students = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/students'
             headers_students = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-            response_students = requests.get(url_students, headers=headers_students, params=payload_subjects)
+            response_students = requests.get(url_students, headers=headers_students)
             students = json.loads(response_students.text)
-
-            # print(subject_id, subject_name)
             # print(students)
-
             # Добавляем предмет в БД
             add_subject(subject_id, subject_name, students['student_ids'], subject_teachers)
 
             # Получачем все задания этого предмета
             url_tasks = Metadata.MANAGEBAC_URL + 'classes/' + str(subject_id) + '/tasks'
             headers_tasks = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-            response_tasks = requests.get(url_tasks, headers=headers_tasks, params=payload_subjects)
+            response_tasks = requests.get(url_tasks, headers=headers_tasks)
             tasks = json.loads(response_tasks.text)
+            # print(tasks)
+
+            if 'tasks' not in tasks.keys():
+                continue
 
             # Итерируемся по заданиям
             for task in tasks['tasks']:
