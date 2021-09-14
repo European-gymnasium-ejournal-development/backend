@@ -30,7 +30,7 @@ def update_students():
         # Получаем из API ManageBac классы
         url_grades = Metadata.MANAGEBAC_URL + 'year-groups'
         headers_grades = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-        payload_grades = {'page': page, 'per_page': '1000', 'archived': '(0)'}
+        payload_grades = {'page': page, 'per_page': '1000'}
         response_grades = requests.get(url_grades, headers=headers_grades, params=payload_grades)
         grades = json.loads(response_grades.text)
         page += 1  # добавляем 1 к параметру страницы

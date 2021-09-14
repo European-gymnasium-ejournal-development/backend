@@ -11,7 +11,7 @@ def update_teachers():
         # Получаем информацию об учителях
         url = Metadata.MANAGEBAC_URL + 'teachers'
         headers = {'auth-token': Metadata.MANAGEBAC_API_KEY}
-        payload = {'page': page, 'per_page': '1000', 'archived': '(0)'}
+        payload = {'page': page, 'per_page': '1000'}
         response = requests.get(url, headers=headers, params=payload)
         teachers = json.loads(response.text)
         page = page + 1  # добавляем 1 к параметру страницы
