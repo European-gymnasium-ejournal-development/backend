@@ -64,8 +64,8 @@ def update_subjects_tasks_marks():
                     response_tasks = requests.get(url_tasks, headers=headers_tasks, params=payload_tasks)
                     tasks = json.loads(response_tasks.text)
 
-                    print(tasks)
-                    print(headers_tasks, url_tasks)
+                    # print(tasks)
+                    # print(headers_tasks, url_tasks)
 
                     if 'tasks' not in tasks.keys() or 'meta' not in tasks.keys():
                         if total_pages_tasks == -1:
@@ -73,7 +73,7 @@ def update_subjects_tasks_marks():
                         continue
 
                     total_pages_tasks = tasks['meta']['total_pages']
-                    print(tasks['meta']['total_count'])
+                    # print(tasks['meta']['total_count'])
                     if tasks['meta']['total_pages'] > 1:
                         print("AAAAAA total_pages is: {}".format(tasks['meta']['total_pages']))
                     # print(tasks)
