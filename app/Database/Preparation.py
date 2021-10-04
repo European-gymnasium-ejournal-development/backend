@@ -1,4 +1,4 @@
-from app.Database import Marks, Students, Subjects, Tasks, Teachers, db
+from app.Database import Marks, Students, Subjects, Tasks, Teachers, JWRefreshTokens, db
 
 
 def prepare_for_update():
@@ -13,6 +13,8 @@ def prepare_for_update():
 
 
 def remove_not_updated():
+    JWRefreshTokens.delete_not_updated()
+
     Subjects.SubjectToStudentMapping.query.filter_by(is_updated=False).delete()
     Subjects.SubjectsToTeachersMapping.query.filter_by(is_updated=False).delete()
     Tasks.Task.query.filter_by(is_updated=False).delete()

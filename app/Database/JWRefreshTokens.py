@@ -88,3 +88,12 @@ def parse_email_from_token(token):
 def get_token(token):
     request = JWRefreshToken.query.filter_by(token=token).first()
     return request is not None
+
+
+# Удаляет токены всех учителей, которые не обновлены (которые вскоре сами будут удалены)
+def delete_not_updated():
+    JWRefreshToken.query.filter(
+        JWRefreshToken.email.in_(
+            Teachers.Teacher.query.filter_by(is_updated=False).with_entities(Teachers.Teacher.email))).delete(
+        synchronize_session="fetch")
+    db.session.commit()
