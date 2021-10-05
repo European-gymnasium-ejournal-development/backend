@@ -84,18 +84,24 @@ def add_subject(id, subject_name, students_ids, teachers):
     for student in students_ids:
         record = SubjectToStudentMapping.query.filter_by(student_id=student, subject_id=id)
         student_record = Student.query.filter_by(id=student)
-        if record.first() is None and student_record.first() is not None:
-            new_record = SubjectToStudentMapping(id, student)
-            db.session.add(new_record)
+        if student_record.first() is not None:
+            if record.first() is None:
+                new_record = SubjectToStudentMapping(id, student)
+                db.session.add(new_record)
+            else:
+                record.update(dict(is_updated=True))
 
     # Теперь добавляем учителей в предмет
     for teacher in teachers:
         record = SubjectsToTeachersMapping.query.filter_by(teacher_id=teacher, subject_id=id)
         teacher_record = Teacher.query.filter_by(id=teacher)
 
-        if record.first() is None and teacher_record.first() is not None:
-            new_record = SubjectsToTeachersMapping(id, teacher)
-            db.session.add(new_record)
+        if teacher_record.first() is not None:
+            if record.first() is None:
+                new_record = SubjectsToTeachersMapping(id, teacher)
+                db.session.add(new_record)
+            else:
+                record.update(dict(is_updated=True))
 
     db.session.commit()
 
