@@ -29,7 +29,8 @@ def error(message):
 
 
 def upload_keys():
-    env_file = open('settings.env')
+    # Файл с параметрами должен быть настроен системным администратором
+    env_file = open('settings.env') 
     params = {data.split('=')[0]: data.split('=')[1][:-1] for data in env_file.readlines()}
     Metadata.MANAGEBAC_API_KEY = params['MANAGEBAC_API_KEY']
     Metadata.DATABASE_USER = params['DATABASE_USER']
